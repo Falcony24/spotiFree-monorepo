@@ -1,0 +1,9 @@
+.dart_tool/
+.idea/
+build/
+.git/
+.gitignore
+.packages
+pubspec.lock
+README.md
+test/
