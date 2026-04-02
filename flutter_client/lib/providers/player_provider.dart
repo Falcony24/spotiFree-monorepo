@@ -110,6 +110,7 @@ class PlayerProvider extends ChangeNotifier {
         localPath = _downloadedProvider!.getFilePath(track.id);
       }
       if (localPath != null) {
+        localPath = Uri.file(localPath).toString();
         await _playerService.play(localPath);
       } else {
         final streamUrl = await ApiService().getPresignedStreamUrl(track.id);

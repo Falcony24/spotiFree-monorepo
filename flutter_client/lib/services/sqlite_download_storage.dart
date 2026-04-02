@@ -1,6 +1,5 @@
-
-import 'package:sqflite/sqflite.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'package:frontend/models/track.dart';
 import 'package:frontend/services/download_storage.dart';
@@ -11,6 +10,9 @@ class SqliteDownloadStorage implements DownloadStorage {
   @override
   Future<void> init() async {
     final dbPath = await getDatabasesPath();
+      if (kDebugMode) {
+        print('File exists: $dbPath');
+      }
     final path = join(dbPath, 'downloaded_tracks.db');
     _database = await openDatabase(
       path,

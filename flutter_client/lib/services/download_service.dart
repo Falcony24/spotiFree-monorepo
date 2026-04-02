@@ -15,7 +15,7 @@ class DownloadService {
   Future<String> downloadTrack(Track track, {Function(double progress)? onProgress}) async {
     final streamUrl = await ApiService().getPresignedStreamUrl(track.id);
     final dir = await getApplicationDocumentsDirectory();
-    final filePath = '${dir.path}/${track.id}.mp3';
+    final filePath = '${dir.path}\\${track.id}.mp3';
     final file = File(filePath);
     final cancelToken = CancelToken();
     _cancelTokens[track.id] = cancelToken;

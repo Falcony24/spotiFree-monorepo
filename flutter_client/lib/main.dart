@@ -1,5 +1,7 @@
 
 
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:frontend/providers/albums_provider.dart';
 import 'package:frontend/providers/artist_albums_provider.dart';
@@ -17,11 +19,16 @@ import 'package:frontend/providers/liked_tracks_provider.dart';
 import 'package:frontend/providers/player_provider.dart';
 import 'package:frontend/screens/login_screen.dart';
 import 'package:frontend/screens/register_screen.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
