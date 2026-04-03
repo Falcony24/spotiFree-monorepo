@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/track.dart';
 import 'package:frontend/services/download_storage.dart';
-import 'package:frontend/services/sqlite_download_storage.dart';
-import 'package:frontend/services/memory_download_storage.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+
+import 'package:frontend/services/download_storage_web.dart'
+    if (dart.library.io) 'package:frontend/services/download_storage_mobile.dart';
 
 class DownloadedTracksProvider extends ChangeNotifier {
   late DownloadStorage _storage;
@@ -15,7 +15,7 @@ class DownloadedTracksProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   DownloadedTracksProvider() {
-    _storage = kIsWeb ? MemoryDownloadStorage() : SqliteDownloadStorage();
+    _storage = createDownloadStorage();
     _init();
   }
 
@@ -33,13 +33,8 @@ class DownloadedTracksProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool isDownloaded(String trackId) {
-    return _filePaths.containsKey(trackId);
-  }
-
-  String? getFilePath(String trackId) {
-    return _filePaths[trackId];
-  }
+  bool isDownloaded(String trackId) => _filePaths.containsKey(trackId);
+  String? getFilePath(String trackId) => _filePaths[trackId];
 
   Future<void> addDownloadedTrack(Track track, String filePath) async {
     await _storage.addTrack(track, filePath);

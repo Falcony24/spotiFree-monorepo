@@ -2,7 +2,7 @@ class Track {
   final String id;  //MBID
   final String title;
   final String artist;
-  final int? duration;
+  final int? duration; //ms
   final String? artistId; //MBID of the main artist
 
   Track({
@@ -22,4 +22,11 @@ class Track {
       artistId: (json['artist_id'] ?? json['artistId'])?.toString(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'artist': artist,
+    'duration': duration,
+  };
 }

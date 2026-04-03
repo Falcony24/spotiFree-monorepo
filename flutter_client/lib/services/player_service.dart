@@ -33,6 +33,15 @@ class PlayerService {
     });
   }
 
+  Future<void> setSource(String url) async {
+    await _audioPlayer.setSource(UrlSource(url));
+  }
+
+  Future<void> setSourceAndSeek(String url, Duration position) async {
+    await _audioPlayer.setSource(UrlSource(url));
+    await _audioPlayer.seek(position);
+  }
+
   Future<void> play(String url) async {
     try {
       await _audioPlayer.play(UrlSource(url));

@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/models/track.dart';
 import 'package:frontend/providers/downloaded_tracks_provider.dart';
@@ -7,8 +10,9 @@ import 'package:frontend/services/api_service.dart';
 import 'package:frontend/services/player_service.dart';
 import 'package:frontend/main.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class PlayerProvider extends ChangeNotifier {
+class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
   final PlayerService _playerService = PlayerService();
   Track? _currentTrack;
   bool _isPlaying = false;
@@ -19,7 +23,6 @@ class PlayerProvider extends ChangeNotifier {
   bool _pollingCancelled = false;
   ModeProvider? _modeProvider;
   DownloadedTracksProvider? _downloadedProvider;
-  
   List<Track> _queue = [];
   int _currentIndex = -1;
 
@@ -38,12 +41,18 @@ class PlayerProvider extends ChangeNotifier {
   int get currentIndex => _currentIndex;
   bool get hasNext => _currentIndex < _queue.length - 1;
   bool get hasPrevious => _currentIndex > 0;
+  
+  SharedPreferences? _prefs;
+  Timer? _saveTimer;
+  bool _isRestoring = false;
 
   PlayerProvider() {
+    _initPrefs();
     _playerService.init();
     _playerService.onPosition.listen((pos) {
       _position = pos;
       notifyListeners();
+      _debounceSavePosition();
     });
     _playerService.onDuration.listen((dur) {
       _duration = dur;
@@ -51,6 +60,9 @@ class PlayerProvider extends ChangeNotifier {
     });
     _playerService.onPlaying.listen((playing) {
       _isPlaying = playing;
+      if (!playing) {
+        _saveCurrentState();
+      }
       notifyListeners();
     });
     _playerService.onComplete.listen((_) {
@@ -59,10 +71,95 @@ class PlayerProvider extends ChangeNotifier {
       } else {
         _currentTrack = null;
         _isPlaying = false;
+        _saveCurrentState(); // clear last track
         notifyListeners();
       }
     });
+    WidgetsBinding.instance.addObserver(this);
   }
+
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+    await _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final savedVolume = _prefs?.getDouble('volume') ?? 1.0;
+    _volume = savedVolume.clamp(0.0, 1.0);
+    await _playerService.setVolume(_volume);
+    notifyListeners();
+
+    final lastTrackJson = _prefs?.getString('last_track');
+    final lastPositionMs = _prefs?.getInt('last_position') ?? 0;
+    if (lastTrackJson != null) {
+      try {
+        final savedTrack = Track.fromJson(jsonDecode(lastTrackJson));
+        _currentTrack = savedTrack;
+        _position = Duration(milliseconds: lastPositionMs);
+        _duration = Duration(milliseconds: savedTrack.duration ?? 0);
+        _queue = [savedTrack];
+        _currentIndex = 0;
+        notifyListeners();
+
+        // Preload the track without playing
+        _isRestoring = true;
+        await _preloadTrack(savedTrack, lastPositionMs);
+        _isRestoring = false;
+      } catch (e) {
+        debugPrint('Failed to restore last track: $e');
+      }
+    }
+  }
+
+  Future<void> _preloadTrack(Track track, int seekMs) async {
+    try {
+      String source;
+      if (_modeProvider != null && _modeProvider!.isOfflineMode) {
+        if (_downloadedProvider == null || !_downloadedProvider!.isDownloaded(track.id)) {
+          return;
+        }
+        final localPath = _downloadedProvider!.getFilePath(track.id);
+        if (localPath == null) return;
+        source = Uri.file(localPath).toString();
+      } else {
+        String? localPath;
+        if (_downloadedProvider != null && _downloadedProvider!.isDownloaded(track.id)) {
+          localPath = _downloadedProvider!.getFilePath(track.id);
+        }
+        if (localPath != null) {
+          source = Uri.file(localPath).toString();
+        } else {
+          source = await ApiService().getPresignedStreamUrl(track.id);
+        }
+      }
+      await _playerService.setSourceAndSeek(source, Duration(milliseconds: seekMs));
+      // Player is now loaded but paused at the saved position
+    } catch (e) {
+      debugPrint('Preload error: $e');
+      // If preload fails, clear saved state
+      _currentTrack = null;
+      _saveCurrentState();
+    }
+  }
+
+  void _debounceSavePosition() {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(seconds: 2), () {
+      _saveCurrentState();
+    });
+  }
+
+  Future<void> _saveCurrentState() async {
+    if (_prefs == null) return;
+    if (_currentTrack != null) {
+      await _prefs!.setString('last_track', jsonEncode(_currentTrack!.toJson()));
+      await _prefs!.setInt('last_position', _position.inMilliseconds);
+    } else {
+      await _prefs!.remove('last_track');
+      await _prefs!.remove('last_position');
+    }
+  }
+
   void updateDependencies(ModeProvider mode, DownloadedTracksProvider downloaded) {
     _modeProvider = mode;
     _downloadedProvider = downloaded;
@@ -90,6 +187,7 @@ class PlayerProvider extends ChangeNotifier {
     }
     _currentTaskId = null;
     _currentTrack = track;
+    _saveCurrentState(); // persist new track
     notifyListeners();
 
     try {
@@ -99,7 +197,8 @@ class PlayerProvider extends ChangeNotifier {
         }
         final localPath = _downloadedProvider!.getFilePath(track.id);
         if (localPath == null) throw Exception('Local file missing');
-        await _playerService.play(localPath);
+        final fileUri = Uri.file(localPath).toString();
+        await _playerService.play(fileUri);
         _isPlaying = true;
         notifyListeners();
         return;
@@ -110,8 +209,8 @@ class PlayerProvider extends ChangeNotifier {
         localPath = _downloadedProvider!.getFilePath(track.id);
       }
       if (localPath != null) {
-        localPath = Uri.file(localPath).toString();
-        await _playerService.play(localPath);
+        final fileUri = Uri.file(localPath).toString();
+        await _playerService.play(fileUri);
       } else {
         final streamUrl = await ApiService().getPresignedStreamUrl(track.id);
         await _playerService.play(streamUrl);
@@ -134,6 +233,7 @@ class PlayerProvider extends ChangeNotifier {
         SnackBar(content: Text('Nie można odtworzyć utworu: $e')),
       );
       _currentTrack = null;
+      _saveCurrentState();
       notifyListeners();
     }
   }
@@ -202,7 +302,15 @@ class PlayerProvider extends ChangeNotifier {
   }
 
   Future<void> pause() async => _playerService.pause();
-  Future<void> resume() async => _playerService.resume();
+  Future<void> resume() async {
+  if (_currentTrack != null && _queue.isEmpty) {
+    _queue = [_currentTrack!];
+    _currentIndex = 0;
+    await playCurrent();
+  } else {
+    await _playerService.resume();
+  }
+}
 
   Future<void> stop() async {
     await _playerService.stop();
@@ -217,12 +325,14 @@ class PlayerProvider extends ChangeNotifier {
     _currentTaskId = null;
     _queue = [];
     _currentIndex = -1;
+    _saveCurrentState(); // clear saved track
     notifyListeners();
   }
 
   Future<void> setVolume(double volume) async {
     _volume = volume.clamp(0.0, 1.0);
     await _playerService.setVolume(_volume);
+    await _prefs?.setDouble('volume', _volume);
     notifyListeners();
   }
 
@@ -233,11 +343,23 @@ class PlayerProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> seekTo(Duration position) async => _playerService.seek(position);
+  Future<void> seekTo(Duration position) async {
+    await _playerService.seek(position);
+    _debounceSavePosition();
+  }
 
   @override
   void dispose() {
+    _saveTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _playerService.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      _saveCurrentState();
+    }
   }
 }
