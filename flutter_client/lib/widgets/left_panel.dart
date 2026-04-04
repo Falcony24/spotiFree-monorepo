@@ -80,24 +80,14 @@ class _LeftPanelState extends State<LeftPanel> {
                 return SwitchListTile(
                   title: const Text('Tryb offline'),
                   value: modeProvider.isOfflineMode,
-                  onChanged: (value) {
-                    if (kIsWeb && value) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Tryb offline nie jest dostępny w przeglądarce.'),
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
-                      return;
-                    }
-                    modeProvider.setOfflineMode(value);
-                  },
-                  secondary: const Icon(Icons.offline_bolt),
+                  onChanged: modeProvider.hasInternet ? modeProvider.setOfflineMode : null,
+                  secondary: Icon(
+                    modeProvider.hasInternet ? Icons.offline_bolt : Icons.wifi_off,
+                    color: modeProvider.hasInternet ? null : Colors.grey,
+                  ),
                 );
               },
             ),
-          ],
-          if (!widget.isCollapsed)
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Wyloguj'),
@@ -105,6 +95,7 @@ class _LeftPanelState extends State<LeftPanel> {
                 await authProvider.logout();
               },
             ),
+          ],
         ],
       ),
     );

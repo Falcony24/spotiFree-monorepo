@@ -6,6 +6,7 @@ import 'package:frontend/widgets/track_tile.dart';
 import 'package:frontend/providers/liked_albums_provider.dart';
 import 'package:frontend/providers/album_detail_provider.dart';
 import 'package:frontend/providers/player_provider.dart';
+import 'package:frontend/providers/mode_provider.dart';
 
 class AlbumDetailScreen extends StatelessWidget {
   final Album? album;
@@ -87,8 +88,17 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
+    return ChangeNotifierProxyProvider<ModeProvider, AlbumDetailProvider>(
       create: (_) => AlbumDetailProvider(widget.albumId),
+      update: (_, modeProvider, previous) {
+        final provider = previous ?? AlbumDetailProvider(widget.albumId);
+        provider.setModeProvider(modeProvider);
+        // Auto‑fetch when the provider is created (only once)
+        if (previous == null) {
+          provider.fetchTracks();
+        }
+        return provider;
+      },
       child: Scaffold(
         appBar: AppBar(
           title: Text(_albumTitle ?? 'Album'),
@@ -118,6 +128,15 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
                 );
               },
             ),
+            // Optional: manual refresh button
+            Consumer<AlbumDetailProvider>(
+              builder: (context, provider, child) {
+                return IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: () => provider.fetchTracks(),
+                );
+              },
+            ),
           ],
         ),
         body: _isLoadingMetadata
@@ -135,19 +154,22 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
                       if (provider.tracks.isEmpty) {
                         return const Center(child: Text('Brak utworów w tym albumie'));
                       }
-                      return ListView.builder(
-                        padding: const EdgeInsets.all(8),
-                        itemCount: provider.tracks.length,
-                        itemBuilder: (ctx, index) {
-                          final track = provider.tracks[index];
-                          return TrackTile(
-                            track: track,
-                            onPlay: () {
-                              final player = Provider.of<PlayerProvider>(context, listen: false);
-                              player.playTracks(provider.tracks, startIndex: index);
-                            },
-                          );
-                        },
+                      return RefreshIndicator(
+                        onRefresh: () => provider.fetchTracks(),
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(8),
+                          itemCount: provider.tracks.length,
+                          itemBuilder: (ctx, index) {
+                            final track = provider.tracks[index];
+                            return TrackTile(
+                              track: track,
+                              onPlay: () {
+                                final player = Provider.of<PlayerProvider>(context, listen: false);
+                                player.playTracks(provider.tracks, startIndex: index);
+                              },
+                            );
+                          },
+                        ),
                       );
                     },
                   ),

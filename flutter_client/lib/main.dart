@@ -53,7 +53,10 @@ class MyApp extends StatelessWidget {
           update: (context, mode, downloaded, previous) =>
           previous!..updateDependencies(mode, downloaded),
         ),
-        ChangeNotifierProvider(create: (_) => AlbumsProvider()),
+        ChangeNotifierProxyProvider<ModeProvider, AlbumsProvider>(
+          create: (_) => AlbumsProvider(),
+          update: (_, modeProvider, previous) => previous!..setModeProvider(modeProvider),
+        ),
         ChangeNotifierProvider(create: (_) => ArtistDetailsProvider()),
         ChangeNotifierProvider(create: (_) => ArtistAlbumsProvider()),
         ChangeNotifierProvider(create: (_) => ArtistTracksProvider()),
