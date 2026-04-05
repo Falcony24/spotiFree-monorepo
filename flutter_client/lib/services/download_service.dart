@@ -34,7 +34,7 @@ class DownloadService {
       );
       return filePath;
     } catch (e) {
-      if (e is DioError && CancelToken.isCancel(e)) {
+      if (e is DioException && CancelToken.isCancel(e)) {
         if (file.existsSync()) await file.delete();
         throw Exception('Download cancelled');
       }

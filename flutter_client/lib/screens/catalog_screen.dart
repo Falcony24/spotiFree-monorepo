@@ -30,7 +30,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
     final provider = Provider.of<AlbumsProvider>(context);
     final mode = Provider.of<ModeProvider>(context);
 
-    // Show offline message if offline mode is on and no albums cached
     if (mode.isOfflineMode && provider.albums.isEmpty) {
       return const Center(
         child: Column(

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/models/album.dart';
@@ -41,10 +42,17 @@ class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
     final likedAlbumsProvider = Provider.of<LikedAlbumsProvider>(context, listen: false);
     final likedArtistsProvider = Provider.of<LikedArtistsProvider>(context, listen: false);
 
-    playlistProvider.fetchPlaylists();           
-    likedTracksProvider.fetchLikedTracks();
-    likedAlbumsProvider.fetchLikedAlbums();
-    likedArtistsProvider.fetchLikedArtists();
+    try{
+      playlistProvider.fetchPlaylists();           
+      likedTracksProvider.fetchLikedTracks();
+      likedAlbumsProvider.fetchLikedAlbums();
+      likedArtistsProvider.fetchLikedArtists();
+    }
+    catch(e){
+      if (kDebugMode) {
+        print(e);
+      }
+    }
   }
 
   void _goToHome() {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 
 class ModeProvider extends ChangeNotifier {
   bool _isOfflineMode = false;
@@ -8,6 +8,9 @@ class ModeProvider extends ChangeNotifier {
 
   bool get isOfflineMode => _isOfflineMode;
   bool get hasInternet => _hasInternet;
+
+  final InternetConnectionChecker _connectionChecker =
+      InternetConnectionChecker();
 
   ModeProvider() {
     _init();
@@ -26,8 +29,7 @@ class ModeProvider extends ChangeNotifier {
   }
 
   Future<void> _checkInitialConnectivity() async {
-    final result = await Connectivity().checkConnectivity();
-    _hasInternet = result != ConnectivityResult.none;
+    _hasInternet = await _connectionChecker.hasConnection;
     if (!_hasInternet && !_isOfflineMode) {
       _isOfflineMode = true;
       await _saveMode();
@@ -36,9 +38,10 @@ class ModeProvider extends ChangeNotifier {
   }
 
   void _monitorConnectivity() {
-    Connectivity().onConnectivityChanged.listen((result) {
+    _connectionChecker.onStatusChange.listen((status) {
       final previousInternet = _hasInternet;
-      _hasInternet = result != ConnectivityResult.none;
+      _hasInternet = (status == InternetConnectionStatus.connected);
+
       if (!_hasInternet && !_isOfflineMode) {
         _isOfflineMode = true;
         _saveMode();

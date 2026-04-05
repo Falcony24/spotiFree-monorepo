@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/playlist.dart';
+import 'package:frontend/providers/mode_provider.dart';
 import 'package:frontend/services/api_service.dart';
+import 'package:frontend/services/offline_playlist_storage.dart';
 
 class PlaylistProvider extends ChangeNotifier {
   List<Playlist> _playlists = [];
@@ -9,6 +11,7 @@ class PlaylistProvider extends ChangeNotifier {
   int _total = 0;
   int _currentLimit = 20;
   int _currentOffset = 0;
+  ModeProvider? _modeProvider;
 
   List<Playlist> get playlists => _playlists;
   bool get isLoading => _isLoading;
@@ -17,12 +20,22 @@ class PlaylistProvider extends ChangeNotifier {
   bool get hasMore => _playlists.length < _total;
 
   final ApiService _api = ApiService();
+  final OfflinePlaylistStorage _offlineStorage = OfflinePlaylistStorage();
+
+  void setModeProvider(ModeProvider modeProvider) {
+    _modeProvider = modeProvider;
+  }
 
   Future<void> fetchPlaylists({
     int limit = 20,
     int offset = 0,
     bool refresh = false,
   }) async {
+    if (_modeProvider?.isOfflineMode == true) {
+      await _loadFromOffline();
+      return;
+    }
+
     if (refresh) {
       _playlists.clear();
       _currentOffset = 0;
@@ -41,8 +54,35 @@ class PlaylistProvider extends ChangeNotifier {
       } else {
         _playlists.addAll(result['data']);
       }
+
+      await _saveToOffline();
     } catch (e) {
       _error = e.toString();
+      if (_playlists.isEmpty) {
+        await _loadFromOffline();
+      }
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _saveToOffline() async {
+    for (final playlist in _playlists) {
+      await _offlineStorage.insertPlaylist(playlist);
+    }
+  }
+
+  Future<void> _loadFromOffline() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      _playlists = await _offlineStorage.getAllPlaylists();
+      _total = _playlists.length;
+    } catch (e) {
+      _error = e.toString();
+      _playlists = [];
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -53,6 +93,7 @@ class PlaylistProvider extends ChangeNotifier {
     try {
       await _api.deletePlaylist(playlistId);
       _playlists.removeWhere((p) => p.id == playlistId);
+      await _offlineStorage.deletePlaylist(playlistId);
       notifyListeners();
     } catch (e) {
       debugPrint('Błąd usuwania playlisty: $e');

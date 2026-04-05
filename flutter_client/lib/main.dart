@@ -8,6 +8,7 @@ import 'package:frontend/providers/downloaded_tracks_provider.dart';
 import 'package:frontend/providers/liked_albums_provider.dart';
 import 'package:frontend/providers/liked_artists_provider.dart';
 import 'package:frontend/providers/mode_provider.dart';
+import 'package:frontend/providers/playlist_tracks_provider.dart';
 import 'package:frontend/widgets/authenticated_wrapper.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/providers/auth_provider.dart';
@@ -42,16 +43,29 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..loadUser()),
-        ChangeNotifierProvider(create: (_) => PlaylistProvider()),
-        ChangeNotifierProvider(create: (_) => LikedTracksProvider()),
-        ChangeNotifierProvider(create: (_) => LikedAlbumsProvider()),
-        ChangeNotifierProvider(create: (_) => LikedArtistsProvider()),
         ChangeNotifierProvider(create: (_) => ModeProvider()),
         ChangeNotifierProvider(create: (_) => DownloadedTracksProvider()),
+                ChangeNotifierProxyProvider<ModeProvider, PlaylistProvider>(
+          create: (_) => PlaylistProvider(),
+          update: (_, modeProvider, previous) => previous!..setModeProvider(modeProvider),
+        ),
+        
+        ChangeNotifierProxyProvider<ModeProvider, PlaylistTracksProvider>(
+          create: (_) => PlaylistTracksProvider(),
+          update: (_, modeProvider, previous) => previous!..setModeProvider(modeProvider),
+        ),
+        
+        ChangeNotifierProxyProvider<ModeProvider, LikedTracksProvider>(
+          create: (_) => LikedTracksProvider(),
+          update: (_, modeProvider, previous) => previous!..setModeProvider(modeProvider),
+        ),
+        ChangeNotifierProvider(create: (_) => LikedAlbumsProvider()),
+        ChangeNotifierProvider(create: (_) => LikedArtistsProvider()),
+        
         ChangeNotifierProxyProvider2<ModeProvider, DownloadedTracksProvider, PlayerProvider>(
           create: (_) => PlayerProvider(),
           update: (context, mode, downloaded, previous) =>
-          previous!..updateDependencies(mode, downloaded),
+              previous!..updateDependencies(mode, downloaded),
         ),
         ChangeNotifierProxyProvider<ModeProvider, AlbumsProvider>(
           create: (_) => AlbumsProvider(),

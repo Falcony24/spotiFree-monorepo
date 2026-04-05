@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/providers/mode_provider.dart';
 import 'package:provider/provider.dart';
@@ -71,8 +70,6 @@ class _LeftPanelState extends State<LeftPanel> {
               child: _buildContent(playlistProvider, albumsProvider, artistsProvider),
             ),
           ),
-          if (!widget.isCollapsed)
-            const Divider(),
           if (!widget.isCollapsed) ...[
             const Divider(),
             Consumer<ModeProvider>(
@@ -80,7 +77,9 @@ class _LeftPanelState extends State<LeftPanel> {
                 return SwitchListTile(
                   title: const Text('Tryb offline'),
                   value: modeProvider.isOfflineMode,
-                  onChanged: modeProvider.hasInternet ? modeProvider.setOfflineMode : null,
+                  onChanged: modeProvider.hasInternet
+                      ? (value) => modeProvider.setOfflineMode(value)
+                      : null,
                   secondary: Icon(
                     modeProvider.hasInternet ? Icons.offline_bolt : Icons.wifi_off,
                     color: modeProvider.hasInternet ? null : Colors.grey,
@@ -96,6 +95,27 @@ class _LeftPanelState extends State<LeftPanel> {
               },
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOfflinePlaceholder(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.wifi_off, size: 48, color: Colors.grey),
+          const SizedBox(height: 16),
+          Text(
+            'Tryb offline – $message',
+            style: const TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Wyłącz tryb offline, aby przeglądać katalog',
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          ),
         ],
       ),
     );
@@ -251,9 +271,12 @@ class _LeftPanelState extends State<LeftPanel> {
       }
     } else {
       if (artistsProvider.artists.isEmpty && !artistsProvider.isLoading) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          artistsProvider.fetchLikedArtists();
-        });
+        final mode = Provider.of<ModeProvider>(context, listen: false);
+        if (!mode.isOfflineMode) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            artistsProvider.fetchLikedArtists();
+          });
+        }
       }
       if (artistsProvider.isLoading) return const Center(child: CircularProgressIndicator());
       if (artistsProvider.artists.isEmpty) return const Center(child: Text('Brak polubionych artystów'));
