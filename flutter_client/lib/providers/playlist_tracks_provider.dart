@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/track.dart';
 import 'package:frontend/providers/mode_provider.dart';
 import 'package:frontend/services/api_service.dart';
-import 'package:frontend/services/offline_playlist_storage.dart';
+import 'package:frontend/services/offline_storage.dart';
 
 class PlaylistTracksProvider extends ChangeNotifier {
   List<Track> _tracks = [];
@@ -15,7 +15,7 @@ class PlaylistTracksProvider extends ChangeNotifier {
   String? get error => _error;
 
   final ApiService _api = ApiService();
-  final OfflinePlaylistStorage _offlineStorage = OfflinePlaylistStorage();
+  final UnifiedOfflineStorage _storage = UnifiedOfflineStorage();
 
   void setModeProvider(ModeProvider modeProvider) {
     _modeProvider = modeProvider;
@@ -33,7 +33,7 @@ class PlaylistTracksProvider extends ChangeNotifier {
     try {
       final data = await _api.getPlaylistDetail(playlistId);
       _tracks = List<Track>.from(data['tracks']);
-      await _offlineStorage.savePlaylistTracks(playlistId, _tracks);
+      await _storage.savePlaylistTracks(playlistId, _tracks);
     } catch (e) {
       _error = e.toString();
       _tracks = [];
@@ -49,7 +49,7 @@ class PlaylistTracksProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      _tracks = await _offlineStorage.getPlaylistTracks(playlistId);
+      _tracks = await _storage.getPlaylistTracks(playlistId);
       if (_tracks.isEmpty) {
         _error = 'No offline data available for this playlist.';
       }

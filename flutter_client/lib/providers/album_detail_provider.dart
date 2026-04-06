@@ -21,7 +21,6 @@ class AlbumDetailProvider extends ChangeNotifier {
   }
 
   Future<void> fetchTracks() async {
-    // If offline mode is enabled, show error and do nothing
     if (_modeProvider?.isOfflineMode == true) {
       _errorTracks = 'Tryb offline – brak dostępu do utworów. Wyłącz tryb offline, aby pobrać utwory.';
       _tracks = [];

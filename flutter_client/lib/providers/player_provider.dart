@@ -71,7 +71,7 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
       } else {
         _currentTrack = null;
         _isPlaying = false;
-        _saveCurrentState(); // clear last track
+        _saveCurrentState(); 
         notifyListeners();
       }
     });
@@ -101,7 +101,6 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
         _currentIndex = 0;
         notifyListeners();
 
-        // Preload the track without playing
         _isRestoring = true;
         await _preloadTrack(savedTrack, lastPositionMs);
         _isRestoring = false;
@@ -133,10 +132,8 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
         }
       }
       await _playerService.setSourceAndSeek(source, Duration(milliseconds: seekMs));
-      // Player is now loaded but paused at the saved position
     } catch (e) {
       debugPrint('Preload error: $e');
-      // If preload fails, clear saved state
       _currentTrack = null;
       _saveCurrentState();
     }
@@ -187,7 +184,7 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
     }
     _currentTaskId = null;
     _currentTrack = track;
-    _saveCurrentState(); // persist new track
+    _saveCurrentState(); 
     notifyListeners();
 
     try {
@@ -325,7 +322,7 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
     _currentTaskId = null;
     _queue = [];
     _currentIndex = -1;
-    _saveCurrentState(); // clear saved track
+    _saveCurrentState(); 
     notifyListeners();
   }
 

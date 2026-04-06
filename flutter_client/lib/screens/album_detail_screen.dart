@@ -93,86 +93,83 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
       update: (_, modeProvider, previous) {
         final provider = previous ?? AlbumDetailProvider(widget.albumId);
         provider.setModeProvider(modeProvider);
-        // Auto‑fetch when the provider is created (only once)
-        if (previous == null) {
-          provider.fetchTracks();
-        }
         return provider;
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(_albumTitle ?? 'Album'),
-          backgroundColor: Colors.black,
-          actions: [
-            Consumer<AlbumDetailProvider>(
-              builder: (context, provider, child) {
-                if (provider.tracks.isEmpty) return const SizedBox.shrink();
-                return IconButton(
-                  icon: const Icon(Icons.play_arrow),
-                  onPressed: () {
-                    final player = Provider.of<PlayerProvider>(context, listen: false);
-                    player.playTracks(provider.tracks, startIndex: 0);
-                  },
-                );
-              },
-            ),
-            Consumer<LikedAlbumsProvider>(
-              builder: (context, likedProvider, child) {
-                final isLiked = likedProvider.isLiked(widget.albumId);
-                return IconButton(
-                  icon: Icon(
-                    isLiked ? Icons.favorite : Icons.favorite_border,
-                    color: isLiked ? Colors.green : Colors.white,
-                  ),
-                  onPressed: _toggleLike,
-                );
-              },
-            ),
-            // Optional: manual refresh button
-            Consumer<AlbumDetailProvider>(
-              builder: (context, provider, child) {
-                return IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: () => provider.fetchTracks(),
-                );
-              },
-            ),
-          ],
-        ),
-        body: _isLoadingMetadata
-            ? const Center(child: CircularProgressIndicator())
-            : _metadataError != null
-                ? Center(child: Text('Błąd: $_metadataError'))
-                : Consumer<AlbumDetailProvider>(
-                    builder: (context, provider, child) {
-                      if (provider.isLoadingTracks) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (provider.errorTracks != null) {
-                        return Center(child: Text('Błąd: ${provider.errorTracks}'));
-                      }
-                      if (provider.tracks.isEmpty) {
-                        return const Center(child: Text('Brak utworów w tym albumie'));
-                      }
-                      return RefreshIndicator(
-                        onRefresh: () => provider.fetchTracks(),
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(8),
-                          itemCount: provider.tracks.length,
-                          itemBuilder: (ctx, index) {
-                            final track = provider.tracks[index];
-                            return TrackTile(
-                              track: track,
-                              onPlay: () {
-                                final player = Provider.of<PlayerProvider>(context, listen: false);
-                                player.playTracks(provider.tracks, startIndex: index);
-                              },
-                            );
-                          },
-                        ),
-                      );
+      child: Consumer<AlbumDetailProvider>(
+        builder: (context, provider, child) {
+          final modeProvider = Provider.of<ModeProvider>(context);
+          if (!modeProvider.isOfflineMode && provider.tracks.isEmpty && !provider.isLoadingTracks) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              provider.fetchTracks();
+            });
+          }
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(_albumTitle ?? 'Album'),
+              backgroundColor: Colors.black,
+              actions: [
+                if (provider.tracks.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.play_arrow),
+                    onPressed: () {
+                      final player = Provider.of<PlayerProvider>(context, listen: false);
+                      player.playTracks(provider.tracks, startIndex: 0);
                     },
                   ),
+                Consumer<LikedAlbumsProvider>(
+                  builder: (context, likedProvider, child) {
+                    final isLiked = likedProvider.isLiked(widget.albumId);
+                    return IconButton(
+                      icon: Icon(
+                        isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: isLiked ? Colors.green : Colors.white,
+                      ),
+                      onPressed: _toggleLike,
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: () => provider.fetchTracks(),
+                ),
+              ],
+            ),
+            body: _isLoadingMetadata
+                ? const Center(child: CircularProgressIndicator())
+                : _metadataError != null
+                    ? Center(child: Text('Błąd: $_metadataError'))
+                    : _buildBody(provider),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBody(AlbumDetailProvider provider) {
+    if (provider.isLoadingTracks && provider.tracks.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (provider.errorTracks != null) {
+      return Center(child: Text('Błąd: ${provider.errorTracks}'));
+    }
+    if (provider.tracks.isEmpty) {
+      return const Center(child: Text('Brak utworów w tym albumie'));
+    }
+    return RefreshIndicator(
+      onRefresh: () => provider.fetchTracks(),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(8),
+        itemCount: provider.tracks.length,
+        itemBuilder: (ctx, index) {
+          final track = provider.tracks[index];
+          return TrackTile(
+            track: track,
+            onPlay: () {
+              final player = Provider.of<PlayerProvider>(ctx, listen: false);
+              player.playTracks(provider.tracks, startIndex: index);
+            },
+          );
+        },
       ),
     );
   }

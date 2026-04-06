@@ -64,7 +64,7 @@ class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
   }
 
   void _navigateToAlbum(Album album) {
-    _navigatorKey.currentState?.pushNamed('/album', arguments: album.id);
+    _navigatorKey.currentState?.pushNamed('/album', arguments: album);
   }
 
   void _navigateToArtist(Artist artist) {

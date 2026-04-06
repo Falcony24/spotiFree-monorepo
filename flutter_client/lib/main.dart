@@ -17,6 +17,8 @@ import 'package:frontend/providers/liked_tracks_provider.dart';
 import 'package:frontend/providers/player_provider.dart';
 import 'package:frontend/screens/login_screen.dart';
 import 'package:frontend/screens/register_screen.dart';
+import 'package:frontend/services/sync_service.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -33,6 +35,7 @@ void main() async {
   }
 
   runApp(MyApp());
+  _startSyncListener();
 }
 
 class MyApp extends StatelessWidget {
@@ -45,23 +48,26 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()..loadUser()),
         ChangeNotifierProvider(create: (_) => ModeProvider()),
         ChangeNotifierProvider(create: (_) => DownloadedTracksProvider()),
-                ChangeNotifierProxyProvider<ModeProvider, PlaylistProvider>(
+        ChangeNotifierProxyProvider<ModeProvider, PlaylistProvider>(
           create: (_) => PlaylistProvider(),
           update: (_, modeProvider, previous) => previous!..setModeProvider(modeProvider),
         ),
-        
         ChangeNotifierProxyProvider<ModeProvider, PlaylistTracksProvider>(
           create: (_) => PlaylistTracksProvider(),
           update: (_, modeProvider, previous) => previous!..setModeProvider(modeProvider),
         ),
-        
         ChangeNotifierProxyProvider<ModeProvider, LikedTracksProvider>(
           create: (_) => LikedTracksProvider(),
           update: (_, modeProvider, previous) => previous!..setModeProvider(modeProvider),
         ),
-        ChangeNotifierProvider(create: (_) => LikedAlbumsProvider()),
-        ChangeNotifierProvider(create: (_) => LikedArtistsProvider()),
-        
+        ChangeNotifierProxyProvider<ModeProvider, LikedAlbumsProvider>(
+          create: (_) => LikedAlbumsProvider(),
+          update: (_, modeProvider, previous) => previous!..setModeProvider(modeProvider),
+        ),
+        ChangeNotifierProxyProvider<ModeProvider, LikedArtistsProvider>(
+          create: (_) => LikedArtistsProvider(),
+          update: (_, modeProvider, previous) => previous!..setModeProvider(modeProvider),
+        ),
         ChangeNotifierProxyProvider2<ModeProvider, DownloadedTracksProvider, PlayerProvider>(
           create: (_) => PlayerProvider(),
           update: (context, mode, downloaded, previous) =>
@@ -97,4 +103,13 @@ class MyApp extends StatelessWidget {
       ),
     );
   }
+}
+
+void _startSyncListener() {
+  InternetConnectionChecker().onStatusChange.listen((status) async {
+    if (status == InternetConnectionStatus.connected) {
+      final syncService = SyncService();
+      await syncService.syncAll();
+    }
+  });
 }

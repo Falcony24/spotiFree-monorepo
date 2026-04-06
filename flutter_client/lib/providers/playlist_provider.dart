@@ -1,8 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/models/playlist.dart';
 import 'package:frontend/providers/mode_provider.dart';
 import 'package:frontend/services/api_service.dart';
-import 'package:frontend/services/offline_playlist_storage.dart';
+import 'package:frontend/services/offline_storage.dart';
 
 class PlaylistProvider extends ChangeNotifier {
   List<Playlist> _playlists = [];
@@ -20,7 +22,7 @@ class PlaylistProvider extends ChangeNotifier {
   bool get hasMore => _playlists.length < _total;
 
   final ApiService _api = ApiService();
-  final OfflinePlaylistStorage _offlineStorage = OfflinePlaylistStorage();
+  final UnifiedOfflineStorage _storage = UnifiedOfflineStorage();
 
   void setModeProvider(ModeProvider modeProvider) {
     _modeProvider = modeProvider;
@@ -69,7 +71,7 @@ class PlaylistProvider extends ChangeNotifier {
 
   Future<void> _saveToOffline() async {
     for (final playlist in _playlists) {
-      await _offlineStorage.insertPlaylist(playlist);
+      await _storage.insertPlaylist(playlist);
     }
   }
 
@@ -78,7 +80,7 @@ class PlaylistProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      _playlists = await _offlineStorage.getAllPlaylists();
+      _playlists = await _storage.getAllPlaylists();
       _total = _playlists.length;
     } catch (e) {
       _error = e.toString();
@@ -90,13 +92,53 @@ class PlaylistProvider extends ChangeNotifier {
   }
 
   Future<void> deletePlaylist(int playlistId) async {
+    final isOffline = _modeProvider?.isOfflineMode == true;
     try {
-      await _api.deletePlaylist(playlistId);
+      if (!isOffline) {
+        await _api.deletePlaylist(playlistId);
+        await _storage.permanentlyDeletePlaylist(playlistId);
+      } else {
+        if (playlistId > 0) {
+          await _storage.markPlaylistAsDeleted(playlistId);
+        } else {
+          await _storage.permanentlyDeletePlaylist(playlistId);
+        }
+      }
       _playlists.removeWhere((p) => p.id == playlistId);
-      await _offlineStorage.deletePlaylist(playlistId);
       notifyListeners();
     } catch (e) {
       debugPrint('Błąd usuwania playlisty: $e');
+    }
+  }
+
+  Future<Playlist?> createPlaylist(String name, {String? description, bool isPublic = false}) async {
+    final isOffline = _modeProvider?.isOfflineMode == true;
+    try {
+      if (!isOffline) {
+        final playlist = await _api.createPlaylist(name, description: description, isPublic: isPublic);
+        await _storage.insertPlaylist(playlist);
+        _playlists.add(playlist);
+        notifyListeners();
+        return playlist;
+      } else {
+        final tempId = -DateTime.now().millisecondsSinceEpoch;
+        final playlist = Playlist(
+          id: tempId,
+          name: name,
+          description: description,
+          isPublic: isPublic,
+          userId: 0,
+        );
+        await _storage.insertPlaylist(playlist);
+        await _storage.addToSyncQueue('playlist', 'create', tempId.toString(),
+            payload: jsonEncode({'name': name, 'description': description, 'is_public': isPublic}));
+        _playlists.add(playlist);
+        notifyListeners();
+        return playlist;
+      }
+    } catch (e) {
+      debugPrint('Błąd tworzenia playlisty: $e');
+      return null;
     }
   }
 
