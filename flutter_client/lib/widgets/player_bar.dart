@@ -25,13 +25,13 @@ class PlayerBar extends StatelessWidget {
     final isLiked = likedProvider.isLiked(track.id);
 
     return Container(
-      height: 100, 
+      height: 100,
       color: Colors.grey[900],
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
         children: [
           Expanded(
-            flex: 2,
+            flex: 1,
             child: Row(
               children: [
                 Container(
@@ -103,9 +103,13 @@ class PlayerBar extends StatelessWidget {
                   ],
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Row(
                     children: [
+                      Text(
+                        _formatDuration(player.position),
+                        style: const TextStyle(fontSize: 12),
+                      ),
                       Expanded(
                         child: Slider(
                           value: player.progress,
@@ -117,16 +121,10 @@ class PlayerBar extends StatelessWidget {
                           },
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(_formatDuration(player.position)),
-                      Text(_formatDuration(player.duration)),
+                      Text(
+                        _formatDuration(player.duration),
+                        style: const TextStyle(fontSize: 12),
+                      ),
                     ],
                   ),
                 ),
