@@ -6,7 +6,7 @@ import 'package:frontend/services/api_service.dart';
 import 'package:frontend/services/offline_storage.dart';
 
 class LikedTracksProvider extends ChangeNotifier {
-  final UnifiedOfflineStorage _storage = UnifiedOfflineStorage();
+  final OfflineStorage _storage = OfflineStorage();
   final ApiService _api = ApiService();
   ModeProvider? _modeProvider;
 

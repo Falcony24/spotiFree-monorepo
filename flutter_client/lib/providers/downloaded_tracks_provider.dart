@@ -3,7 +3,7 @@ import 'package:frontend/models/track.dart';
 import 'package:frontend/services/offline_storage.dart';
 
 class DownloadedTracksProvider extends ChangeNotifier {
-  final UnifiedOfflineStorage _storage = UnifiedOfflineStorage();
+  final OfflineStorage _storage = OfflineStorage();
   List<Track> _downloadedTracks = [];
   Map<String, String> _filePaths = {};
   bool _isLoading = false;

@@ -48,15 +48,11 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> register(
-      String username, String password) async {
+  Future<Map<String, dynamic>> register(String username, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/register'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'username': username,
-        'password': password,
-      }),
+      body: jsonEncode({'username': username, 'password': password}),
     );
 
     if (response.statusCode == 201) {
@@ -68,22 +64,28 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> refreshToken() async {
+  Future<bool> refreshToken() async {
     final refreshToken = await getRefreshToken();
-    if (refreshToken == null) throw Exception('Brak refresh tokena');
+    if (refreshToken == null) return false;
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/auth/refresh'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'refreshToken': refreshToken}),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/refresh'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'refreshToken': refreshToken}),
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      await saveTokens(data['accessToken'], data['refreshToken']);
-      return data;
-    } else {
-      throw Exception('Nie udało się odświeżyć tokena');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        await saveTokens(data['accessToken'], data['refreshToken']);
+        return true;
+      } else {
+        await clearTokens();
+        return false;
+      }
+    } catch (e) {
+      await clearTokens();
+      return false;
     }
   }
 

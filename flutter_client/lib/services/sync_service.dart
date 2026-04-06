@@ -4,7 +4,7 @@ import 'package:frontend/services/api_service.dart';
 import 'package:frontend/models/track.dart';
 
 class SyncService {
-  final UnifiedOfflineStorage _storage = UnifiedOfflineStorage();
+  final OfflineStorage _storage = OfflineStorage();
   final ApiService _api = ApiService();
 
   Future<void> syncAll() async {

@@ -16,7 +16,7 @@ class LikedArtistsProvider extends ChangeNotifier {
   String? get error => _error;
 
   final ApiService _api = ApiService();
-  final UnifiedOfflineStorage _storage = UnifiedOfflineStorage();
+  final OfflineStorage _storage = OfflineStorage();
 
   void setModeProvider(ModeProvider modeProvider) {
     _modeProvider = modeProvider;

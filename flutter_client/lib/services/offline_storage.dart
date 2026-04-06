@@ -6,10 +6,10 @@ import 'package:frontend/models/playlist.dart';
 import 'package:frontend/models/album.dart';
 import 'package:frontend/models/artist.dart';
 
-class UnifiedOfflineStorage {
-  static final UnifiedOfflineStorage _instance = UnifiedOfflineStorage._();
-  factory UnifiedOfflineStorage() => _instance;
-  UnifiedOfflineStorage._();
+class OfflineStorage {
+  static final OfflineStorage _instance = OfflineStorage._();
+  factory OfflineStorage() => _instance;
+  OfflineStorage._();
 
   Database? _db;
   final Lock _lock = Lock();
@@ -97,7 +97,6 @@ class UnifiedOfflineStorage {
     );
   }
 
-  // ---------- DOWNLOADED TRACKS ----------
   Future<void> addDownloadedTrack(Track track, String filePath) async {
     await _lock.synchronized(() async {
       final db = await database;
@@ -148,7 +147,6 @@ class UnifiedOfflineStorage {
     });
   }
 
-  // ---------- PLAYLISTS ----------
   Future<void> insertPlaylist(Playlist playlist) async {
     await _lock.synchronized(() async {
       final db = await database;
@@ -241,7 +239,6 @@ class UnifiedOfflineStorage {
     });
   }
 
-  // ---------- LIKED TRACKS ----------
   Future<void> addLikedTrack(int favoriteId, Track track) async {
     await _lock.synchronized(() async {
       final db = await database;
@@ -296,7 +293,6 @@ class UnifiedOfflineStorage {
     });
   }
 
-  // ---------- LIKED ALBUMS ----------
   Future<void> addLikedAlbum(int favoriteId, Album album) async {
     await _lock.synchronized(() async {
       final db = await database;
@@ -338,7 +334,6 @@ class UnifiedOfflineStorage {
     });
   }
 
-  // ---------- LIKED ARTISTS ----------
   Future<void> addLikedArtist(int favoriteId, Artist artist) async {
     await _lock.synchronized(() async {
       final db = await database;
@@ -380,7 +375,6 @@ class UnifiedOfflineStorage {
     });
   }
 
-  // ---------- SYNC QUEUE ----------
   Future<void> addToSyncQueue(String entityType, String action, String? entityId, {String? payload}) async {
     await _lock.synchronized(() async {
       final db = await database;
@@ -408,7 +402,6 @@ class UnifiedOfflineStorage {
     });
   }
 
-  // ---------- RESET / CLEAR ----------
   Future<void> clearAll() async {
     await _lock.synchronized(() async {
       final db = await database;

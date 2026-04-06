@@ -16,7 +16,7 @@ class LikedAlbumsProvider extends ChangeNotifier {
   String? get error => _error;
 
   final ApiService _api = ApiService();
-  final UnifiedOfflineStorage _storage = UnifiedOfflineStorage();
+  final OfflineStorage _storage = OfflineStorage();
 
   void setModeProvider(ModeProvider modeProvider) {
     _modeProvider = modeProvider;
@@ -33,7 +33,6 @@ class LikedAlbumsProvider extends ChangeNotifier {
     notifyListeners();
     try {
       _items = await _api.getLikedAlbums();
-      // Zapisz offline
       for (final item in _items) {
         await _storage.addLikedAlbum(int.parse(item['id'].toString()), item['album']);
       }
@@ -53,7 +52,7 @@ class LikedAlbumsProvider extends ChangeNotifier {
     try {
       final albums = await _storage.getLikedAlbums();
       _items = albums.map((album) => {
-        'id': '',
+        'id': '', 
         'album': album,
       }).toList();
     } catch (e) {
@@ -84,7 +83,9 @@ class LikedAlbumsProvider extends ChangeNotifier {
       if (isCurrentlyLiked) {
         if (_modeProvider?.isOfflineMode != true) {
           final favId = getFavoriteId(album.id);
-          if (favId != null) await _api.unlikeAlbumById(int.parse(favId));
+          if (favId != null) {
+            await _api.unlikeAlbumById(int.parse(favId));
+          }
         }
         await _storage.removeLikedAlbum(album.id);
         if (_modeProvider?.isOfflineMode == true) {
@@ -95,20 +96,28 @@ class LikedAlbumsProvider extends ChangeNotifier {
         int newFavId;
         if (_modeProvider?.isOfflineMode != true) {
           final newFav = await _api.likeAlbum(album.id);
-          newFavId = newFav['id'];
+          newFavId = newFav['id'] as int;
+          await _storage.addLikedAlbum(newFavId, album);
+          _items.add({
+            'id': newFavId.toString(),
+            'album': album,
+          });
         } else {
           newFavId = -1;
+          await _storage.addLikedAlbum(newFavId, album);
           await _storage.addToSyncQueue('liked_album', 'add', album.id);
+          _items.add({
+            'id': newFavId.toString(),
+            'album': album,
+          });
         }
-        await _storage.addLikedAlbum(newFavId, album);
-        _items.add({
-          'id': newFavId.toString(),
-          'album': album,
-        });
       }
       notifyListeners();
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('Błąd podczas zmiany stanu polubienia: $e');
+      debugPrint('Stack trace: $stack');
+      if (e.toString().contains('Failed to like album')) {
+      }
     }
   }
 }

@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:frontend/models/artist.dart';
+import 'package:frontend/services/AuthenticatedHttpClient.dart';
+import 'package:frontend/services/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:frontend/models/album.dart';
 import 'package:frontend/models/playlist.dart';
 import 'package:frontend/models/track.dart';
-import 'package:frontend/services/auth_service.dart';
 
 class PendingException implements Exception {
   final String message;
@@ -13,21 +14,19 @@ class PendingException implements Exception {
 }
 
 class ApiService {
+  final AuthenticatedHttpClient _http = AuthenticatedHttpClient();
+
   static const String baseUrl = String.fromEnvironment(
     'API_URL',
     defaultValue: 'http://localhost:3000/api',
   );
 
-  Future<Map<String, String>> _getHeaders() async {
-    final token = await AuthService().getAccessToken();
-    return {
+  Future<http.StreamedResponse> getAudioStream(String trackMbid) async {
+    final token = await AuthService().getAccessToken();  
+    final headers = {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
-  }
-
-  Future<http.StreamedResponse> getAudioStream(String trackMbid) async {
-    final headers = await _getHeaders();
     final request = http.Request('GET', Uri.parse('$baseUrl/tracks/$trackMbid/audio'));
     request.headers.addAll(headers);
     final response = await request.send();
@@ -44,12 +43,9 @@ class ApiService {
   }
 
   Future<String> getPresignedStreamUrl(String trackMbid) async {
-    final headers = await _getHeaders();
-    final response = await http.get(
+    final response = await _http.get(
       Uri.parse('$baseUrl/tracks/$trackMbid/stream'),
-      headers: headers,
     );
-
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final url = data['streamUrl'];
@@ -65,10 +61,8 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getTaskStatus(int taskId) async {
-    final headers = await _getHeaders();
-    final response = await http.get(
+    final response = await _http.get(
       Uri.parse('$baseUrl/tracks/tasks/$taskId'),
-      headers: headers,
     );
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -78,10 +72,8 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getPlaylists({int limit = 20, int offset = 0}) async {
-    final headers = await _getHeaders();
-    final response = await http.get(
+    final response = await _http.get(
       Uri.parse('$baseUrl/playlists?limit=$limit&offset=$offset'),
-      headers: headers,
     );
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
@@ -99,10 +91,8 @@ class ApiService {
   }
 
   Future<Playlist> createPlaylist(String name, {String? description, bool isPublic = false}) async {
-    final headers = await _getHeaders();
-    final response = await http.post(
+    final response = await _http.post(
       Uri.parse('$baseUrl/playlists'),
-      headers: headers,
       body: jsonEncode({'name': name, 'description': description, 'is_public': isPublic}),
     );
     if (response.statusCode == 201) {
@@ -113,10 +103,8 @@ class ApiService {
   }
 
   Future<void> deletePlaylist(int playlistId) async {
-    final headers = await _getHeaders();
-    final response = await http.delete(
+    final response = await _http.delete(
       Uri.parse('$baseUrl/playlists/$playlistId'),
-      headers: headers,
     );
     if (response.statusCode != 204) {
       throw Exception('Failed to delete playlist');
@@ -124,10 +112,8 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getPlaylistDetail(int playlistId) async {
-    final headers = await _getHeaders();
-    final response = await http.get(
+    final response = await _http.get(
       Uri.parse('$baseUrl/playlists/$playlistId'),
-      headers: headers,
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -142,10 +128,8 @@ class ApiService {
   }
 
   Future<void> addTrackToPlaylist(int playlistId, String trackMbid) async {
-    final headers = await _getHeaders();
-    final response = await http.post(
+    final response = await _http.post(
       Uri.parse('$baseUrl/playlists/$playlistId/tracks'),
-      headers: headers,
       body: jsonEncode({'track_mbid': trackMbid}),
     );
     if (response.statusCode != 201) {
@@ -154,10 +138,8 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getAlbums({int limit = 20, int offset = 0}) async {
-    final headers = await _getHeaders();
-    final response = await http.get(
+    final response = await _http.get(
       Uri.parse('$baseUrl/albums?limit=$limit&offset=$offset'),
-      headers: headers,
     );
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -167,10 +149,8 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getAlbum(String albumMbid) async {
-    final headers = await _getHeaders();
-    final response = await http.get(
+    final response = await _http.get(
       Uri.parse('$baseUrl/albums/$albumMbid'),
-      headers: headers,
     );
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -180,10 +160,8 @@ class ApiService {
   }
 
   Future<List<Track>> getAlbumTracks(String albumMbid) async {
-    final headers = await _getHeaders();
-    final response = await http.get(
+    final response = await _http.get(
       Uri.parse('$baseUrl/albums/$albumMbid/tracks'),
-      headers: headers,
     );
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
@@ -194,10 +172,8 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getArtist(String artistMbid) async {
-    final headers = await _getHeaders();
-    final response = await http.get(
+    final response = await _http.get(
       Uri.parse('$baseUrl/artists/$artistMbid'),
-      headers: headers,
     );
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -207,10 +183,8 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getArtistAlbums(String artistMbid, {int limit = 20, int offset = 0}) async {
-    final headers = await _getHeaders();
-    final response = await http.get(
+    final response = await _http.get(
       Uri.parse('$baseUrl/artists/$artistMbid/albums?limit=$limit&offset=$offset'),
-      headers: headers,
     );
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
@@ -228,10 +202,8 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> getArtistTracks(String artistMbid, {int limit = 20, int offset = 0}) async {
-    final headers = await _getHeaders();
-    final response = await http.get(
+    final response = await _http.get(
       Uri.parse('$baseUrl/artists/$artistMbid/tracks?limit=$limit&offset=$offset'),
-      headers: headers,
     );
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
@@ -249,10 +221,8 @@ class ApiService {
   }
 
   Future<List<Map<String, dynamic>>> getLikedTracks() async {
-    final headers = await _getHeaders();
-    final response = await http.get(
+    final response = await _http.get(
       Uri.parse('$baseUrl/favorites?type=track'),
-      headers: headers,
     );
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
@@ -270,10 +240,8 @@ class ApiService {
   }
 
   Future<List<Map<String, dynamic>>> getLikedAlbums() async {
-    final headers = await _getHeaders();
-    final response = await http.get(
+    final response = await _http.get(
       Uri.parse('$baseUrl/favorites?type=album'),
-      headers: headers,
     );
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
@@ -291,10 +259,8 @@ class ApiService {
   }
 
   Future<List<Map<String, dynamic>>> getLikedArtists() async {
-    final headers = await _getHeaders();
-    final response = await http.get(
+    final response = await _http.get(
       Uri.parse('$baseUrl/favorites?type=artist'),
-      headers: headers,
     );
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
@@ -312,10 +278,8 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> likeTrack(String trackMbid) async {
-    final headers = await _getHeaders();
-    final response = await http.post(
+    final response = await _http.post(
       Uri.parse('$baseUrl/favorites'),
-      headers: headers,
       body: jsonEncode({'item_type': 'track', 'item_mbid': trackMbid}),
     );
     if (response.statusCode == 201) {
@@ -326,10 +290,8 @@ class ApiService {
   }
 
   Future<void> unlikeTrack(int favoriteId) async {
-    final headers = await _getHeaders();
-    final response = await http.delete(
+    final response = await _http.delete(
       Uri.parse('$baseUrl/favorites/$favoriteId'),
-      headers: headers,
     );
     if (response.statusCode != 204) {
       throw Exception('Failed to unlike track');
@@ -337,10 +299,8 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> likeAlbum(String albumMbid) async {
-    final headers = await _getHeaders();
-    final response = await http.post(
+    final response = await _http.post(
       Uri.parse('$baseUrl/favorites'),
-      headers: headers,
       body: jsonEncode({'item_type': 'album', 'item_mbid': albumMbid}),
     );
     if (response.statusCode == 201) {
@@ -351,10 +311,8 @@ class ApiService {
   }
 
   Future<void> unlikeAlbumById(int favoriteId) async {
-    final headers = await _getHeaders();
-    final response = await http.delete(
+    final response = await _http.delete(
       Uri.parse('$baseUrl/favorites/$favoriteId'),
-      headers: headers,
     );
     if (response.statusCode != 204) {
       throw Exception('Failed to unlike album');
@@ -362,10 +320,8 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> likeArtist(String artistMbid) async {
-    final headers = await _getHeaders();
-    final response = await http.post(
+    final response = await _http.post(
       Uri.parse('$baseUrl/favorites'),
-      headers: headers,
       body: jsonEncode({'item_type': 'artist', 'item_mbid': artistMbid}),
     );
     if (response.statusCode == 201) {
@@ -376,10 +332,8 @@ class ApiService {
   }
 
   Future<void> unlikeArtist(int favoriteId) async {
-    final headers = await _getHeaders();
-    final response = await http.delete(
+    final response = await _http.delete(
       Uri.parse('$baseUrl/favorites/$favoriteId'),
-      headers: headers,
     );
     if (response.statusCode != 204) {
       throw Exception('Failed to unlike artist');
@@ -387,15 +341,13 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> search(String query, {String? type, int limit = 20, int offset = 0}) async {
-    final headers = await _getHeaders();
-    Uri uri = Uri.parse('$baseUrl/search')
-        .replace(queryParameters: {
-          'q': query,
-          'type': ?type,
-          'limit': limit.toString(),
-          'offset': offset.toString(),
-        });
-    final response = await http.get(uri, headers: headers);
+    final uri = Uri.parse('$baseUrl/search').replace(queryParameters: {
+      'q': query,
+      if (type != null) 'type': type,
+      'limit': limit.toString(),
+      'offset': offset.toString(),
+    });
+    final response = await _http.get(uri);
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final artistsData = data['artists'] ?? {'data': [], 'total': 0};
@@ -427,10 +379,8 @@ class ApiService {
   }
 
   Future<void> removeTrackFromPlaylist(int playlistId, String trackMbid) async {
-    final headers = await _getHeaders();
-    final response = await http.delete(
+    final response = await _http.delete(
       Uri.parse('$baseUrl/playlists/$playlistId/tracks/$trackMbid'),
-      headers: headers,
     );
     if (response.statusCode != 204) {
       throw Exception('Failed to remove track from playlist');
@@ -438,10 +388,8 @@ class ApiService {
   }
 
   Future<void> reorderPlaylistTracks(int playlistId, List<Map<String, dynamic>> newOrder) async {
-    final headers = await _getHeaders();
-    final response = await http.put(
+    final response = await _http.put(
       Uri.parse('$baseUrl/playlists/$playlistId/tracks/reorder'),
-      headers: headers,
       body: jsonEncode(newOrder),
     );
     if (response.statusCode != 200) {
@@ -450,14 +398,12 @@ class ApiService {
   }
 
   Future<Playlist> updatePlaylist(int playlistId, {String? name, String? description, bool? isPublic}) async {
-    final headers = await _getHeaders();
-    final response = await http.put(
+    final response = await _http.put(
       Uri.parse('$baseUrl/playlists/$playlistId'),
-      headers: headers,
       body: jsonEncode({
-        'name': ?name,
-        'description': ?description,
-        'is_public': ?isPublic,
+        if (name != null) 'name': name,
+        if (description != null) 'description': description,
+        if (isPublic != null) 'is_public': isPublic,
       }),
     );
     if (response.statusCode == 200) {
@@ -467,4 +413,3 @@ class ApiService {
     }
   }
 }
-
