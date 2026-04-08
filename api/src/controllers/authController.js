@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User, RefreshToken } from '../models/index.js';
+import Op from 'sequelize'; 
 
 const generateTokens = async (user) => {
   const accessToken = jwt.sign(
