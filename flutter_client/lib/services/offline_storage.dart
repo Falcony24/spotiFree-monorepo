@@ -237,17 +237,15 @@ class OfflineStorage {
   }
 
   Future<void> _ensureTrackMetadata(Track track) async {
-    await _lock.synchronized(() async {
-      final db = await database;
-      await db.insert('downloaded_tracks', {
-        'track_id': track.id,
-        'file_path': '',
-        'title': track.title,
-        'artist': track.artist,
-        'duration': track.duration,
-        'downloaded_at': null,
-      }, conflictAlgorithm: ConflictAlgorithm.ignore);
-    });
+    final db = await database;
+    await db.insert('downloaded_tracks', {
+      'track_id': track.id,
+      'file_path': '',
+      'title': track.title,
+      'artist': track.artist,
+      'duration': track.duration,
+      'downloaded_at': null,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   Future<void> addLikedTrack(int favoriteId, Track track) async {
