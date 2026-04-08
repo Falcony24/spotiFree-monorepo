@@ -39,7 +39,6 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Liked playlist
     if (widget.playlist.id == -1) {
       return Consumer<LikedTracksProvider>(
         builder: (context, likedProvider, child) {
@@ -92,38 +91,34 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
         },
       );
     }
-
-    // Regular playlist
-    return ChangeNotifierProvider(
-      create: (_) => PlaylistTracksProvider(),
-      child: Consumer<PlaylistTracksProvider>(
-        builder: (context, provider, child) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text(widget.playlist.name),
-              backgroundColor: Colors.black,
-              actions: [
-                if (provider.tracks.isNotEmpty)
-                  IconButton(
-                    icon: const Icon(Icons.play_arrow),
-                    onPressed: () {
-                      final player = Provider.of<PlayerProvider>(context, listen: false);
-                      player.playTracks(provider.tracks, startIndex: 0);
-                    },
-                  ),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: _refresh,
+    
+    return Consumer<PlaylistTracksProvider>(
+      builder: (context, provider, child) {
+        return Scaffold(
+                      appBar: AppBar(
+                  title: Text(widget.playlist.name),
+                  backgroundColor: Colors.black,
+                  actions: [
+                    if (provider.tracks.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.play_arrow),
+                        onPressed: () {
+                          final player = Provider.of<PlayerProvider>(context, listen: false);
+                          player.playTracks(provider.tracks, startIndex: 0);
+                        },
+                      ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed: _refresh,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            body: RefreshIndicator(
-              onRefresh: _refresh,
-              child: _buildBody(provider),
-            ),
-          );
-        },
-      ),
+          body: RefreshIndicator(
+            onRefresh: () => _refresh(),
+            child: _buildBody(provider),
+          ),
+        );
+      },
     );
   }
 
