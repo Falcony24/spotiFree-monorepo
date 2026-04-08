@@ -270,14 +270,6 @@ class _LeftPanelState extends State<LeftPanel> {
         );
       }
     } else {
-      if (artistsProvider.artists.isEmpty && !artistsProvider.isLoading) {
-        final mode = Provider.of<ModeProvider>(context, listen: false);
-        if (!mode.isOfflineMode) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            artistsProvider.fetchLikedArtists();
-          });
-        }
-      }
       if (artistsProvider.isLoading) return const Center(child: CircularProgressIndicator());
       if (artistsProvider.artists.isEmpty) return const Center(child: Text('Brak polubionych artystów'));
       if (widget.isCollapsed) {
