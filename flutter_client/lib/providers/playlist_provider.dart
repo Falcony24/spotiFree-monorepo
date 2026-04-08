@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:frontend/models/playlist.dart';
 import 'package:frontend/providers/mode_provider.dart';
@@ -8,7 +7,8 @@ import 'package:frontend/services/offline_storage.dart';
 
 class PlaylistProvider extends ChangeNotifier {
   List<Playlist> _playlists = [];
-  bool _isLoading = false;
+  bool _isLoading = false;      
+  bool _isRefreshing = false;   
   String? _error;
   int _total = 0;
   int _currentLimit = 20;
@@ -17,6 +17,7 @@ class PlaylistProvider extends ChangeNotifier {
 
   List<Playlist> get playlists => _playlists;
   bool get isLoading => _isLoading;
+  bool get isRefreshing => _isRefreshing;
   String? get error => _error;
   int get total => _total;
   bool get hasMore => _playlists.length < _total;
@@ -28,50 +29,78 @@ class PlaylistProvider extends ChangeNotifier {
     _modeProvider = modeProvider;
   }
 
-  Future<void> fetchPlaylists({
-    int limit = 20,
-    int offset = 0,
-    bool refresh = false,
-  }) async {
-    if (_modeProvider?.isOfflineMode == true) {
+  Future<void> fetchPlaylists({bool refresh = false}) async {
+    final isOffline = _modeProvider?.isOfflineMode == true;
+
+    if (isOffline) {
       await _loadFromOffline();
       return;
     }
 
-    if (refresh) {
-      _playlists.clear();
-      _currentOffset = 0;
+    final cachedPlaylists = await _storage.getAllPlaylists();
+    if (!refresh && cachedPlaylists.isNotEmpty) {
+      _playlists = cachedPlaylists;
+      _total = _playlists.length;
+      notifyListeners();
+    } else if (_playlists.isEmpty) {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
     }
-    _isLoading = true;
-    _error = null;
+
+    _isRefreshing = true;
     notifyListeners();
+
     try {
-      final result = await _api.getPlaylists(limit: limit, offset: offset);
+      final result = await _api.getPlaylists(limit: _currentLimit, offset: 0);
+      final freshPlaylists = List<Playlist>.from(result['data']);
       _total = result['total'];
       _currentLimit = result['limit'];
       _currentOffset = result['offset'];
 
-      if (refresh) {
-        _playlists = List<Playlist>.from(result['data']);
-      } else {
-        _playlists.addAll(result['data']);
-      }
+      _playlists = freshPlaylists;
+      _error = null;
 
-      await _saveToOffline();
+      for (final playlist in freshPlaylists) {
+        await _storage.insertPlaylist(playlist);
+      }
     } catch (e) {
-      _error = e.toString();
       if (_playlists.isEmpty) {
-        await _loadFromOffline();
+        _error = e.toString();
       }
     } finally {
       _isLoading = false;
+      _isRefreshing = false;
       notifyListeners();
     }
   }
 
-  Future<void> _saveToOffline() async {
-    for (final playlist in _playlists) {
-      await _storage.insertPlaylist(playlist);
+  Future<void> loadMore() async {
+    final isOffline = _modeProvider?.isOfflineMode == true;
+    if (isOffline) return;
+    if (_isLoading || _isRefreshing || !hasMore) return;
+
+    _isRefreshing = true;
+    notifyListeners();
+
+    try {
+      final result = await _api.getPlaylists(
+        limit: _currentLimit,
+        offset: _playlists.length,
+      );
+      final newPlaylists = List<Playlist>.from(result['data']);
+      _playlists.addAll(newPlaylists);
+      _total = result['total'];
+      _currentOffset = result['offset'];
+
+      for (final playlist in newPlaylists) {
+        await _storage.insertPlaylist(playlist);
+      }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isRefreshing = false;
+      notifyListeners();
     }
   }
 
@@ -82,6 +111,9 @@ class PlaylistProvider extends ChangeNotifier {
     try {
       _playlists = await _storage.getAllPlaylists();
       _total = _playlists.length;
+      if (_playlists.isEmpty) {
+        _error = 'Brak playlist w trybie offline. Aby je zapisać, połącz się z internetem.';
+      }
     } catch (e) {
       _error = e.toString();
       _playlists = [];
@@ -89,6 +121,10 @@ class PlaylistProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> refresh() async {
+    await fetchPlaylists(refresh: true);
   }
 
   Future<void> deletePlaylist(int playlistId) async {
@@ -140,14 +176,5 @@ class PlaylistProvider extends ChangeNotifier {
       debugPrint('Błąd tworzenia playlisty: $e');
       return null;
     }
-  }
-
-  Future<void> loadMore() async {
-    if (_isLoading || !hasMore) return;
-    await fetchPlaylists(
-      limit: _currentLimit,
-      offset: _playlists.length,
-      refresh: false,
-    );
   }
 }

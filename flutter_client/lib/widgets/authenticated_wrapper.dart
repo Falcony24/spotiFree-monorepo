@@ -28,6 +28,11 @@ class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   bool _isLeftPanelCollapsed = false;
 
+  String? _currentPlaylistId;
+  String? _currentAlbumId;
+  String? _currentArtistId;
+  String? _currentSearchQuery;
+
   @override
   void initState() {
     super.initState();
@@ -42,39 +47,67 @@ class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
     final likedAlbumsProvider = Provider.of<LikedAlbumsProvider>(context, listen: false);
     final likedArtistsProvider = Provider.of<LikedArtistsProvider>(context, listen: false);
 
-    try{
-      playlistProvider.fetchPlaylists();           
+    try {
+      playlistProvider.fetchPlaylists();
       likedTracksProvider.fetchLikedTracks();
       likedAlbumsProvider.fetchLikedAlbums();
       likedArtistsProvider.fetchLikedArtists();
-    }
-    catch(e){
-      if (kDebugMode) {
-        print(e);
-      }
+    } catch (e) {
+      if (kDebugMode) print(e);
     }
   }
 
   void _goToHome() {
     _navigatorKey.currentState?.popUntil((route) => route.isFirst);
+
+    _currentPlaylistId = null;
+    _currentAlbumId = null;
+    _currentArtistId = null;
+    _currentSearchQuery = null;
   }
 
   void _navigateToPlaylist(Playlist playlist) {
-    _navigatorKey.currentState?.pushNamed('/playlist', arguments: playlist);
+    final id = playlist.id.toString();
+    if (_currentPlaylistId == id) {
+      return;
+    }
+    _currentPlaylistId = id;
+    _navigatorKey.currentState?.pushNamed('/playlist', arguments: playlist).then((_) {
+      if (_currentPlaylistId == id) _currentPlaylistId = null;
+    });
   }
 
   void _navigateToAlbum(Album album) {
-    _navigatorKey.currentState?.pushNamed('/album', arguments: album);
+    final id = album.id;
+    if (_currentAlbumId == id) {
+      return;
+    }
+    _currentAlbumId = id;
+    _navigatorKey.currentState?.pushNamed('/album', arguments: album).then((_) {
+      if (_currentAlbumId == id) _currentAlbumId = null;
+    });
   }
 
   void _navigateToArtist(Artist artist) {
-    _navigatorKey.currentState?.pushNamed('/artist', arguments: artist.id);
+    final id = artist.id;
+    if (_currentArtistId == id) {
+      return;
+    }
+    _currentArtistId = id;
+    _navigatorKey.currentState?.pushNamed('/artist', arguments: artist.id).then((_) {
+      if (_currentArtistId == id) _currentArtistId = null;
+    });
   }
 
   void _navigateToSearch(String query) {
-    if (query.isNotEmpty) {
-      _navigatorKey.currentState?.pushNamed('/search', arguments: query);
+    if (query.isEmpty) return;
+    if (_currentSearchQuery == query) {
+      return;
     }
+    _currentSearchQuery = query;
+    _navigatorKey.currentState?.pushNamed('/search', arguments: query).then((_) {
+      if (_currentSearchQuery == query) _currentSearchQuery = null;
+    });
   }
 
   void _toggleLeftPanel() {
@@ -145,18 +178,10 @@ class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
                             builder: (_) => PlaylistDetailScreen(playlist: playlist),
                           );
                         case '/album':
-                          final album = settings.arguments;
-                          if (album is Album) {
-                            return MaterialPageRoute(
-                              builder: (_) => AlbumDetailScreen(album: album),
-                            );
-                          } else if (album is String) {
-                            return MaterialPageRoute(
-                              builder: (_) => AlbumDetailScreen(albumId: album),
-                            );
-                          } else {
-                            return MaterialPageRoute(builder: (_) => const HomeScreen());
-                          }
+                          final album = settings.arguments as Album;
+                          return MaterialPageRoute(
+                            builder: (_) => AlbumDetailScreen(album: album),
+                          );
                         case '/artist':
                           final artistId = settings.arguments as String;
                           return MaterialPageRoute(

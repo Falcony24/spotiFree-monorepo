@@ -10,8 +10,8 @@ import 'package:frontend/widgets/track_tile.dart';
 import 'package:frontend/screens/album_detail_screen.dart';
 
 class ArtistScreen extends StatefulWidget {
-  final Artist? artist;      
-  final String? artistId;    
+  final Artist? artist;
+  final String? artistId;
 
   const ArtistScreen({super.key, this.artist, this.artistId});
 
@@ -27,23 +27,20 @@ class _ArtistScreenState extends State<ArtistScreen> {
     super.initState();
     _artistId = widget.artist?.id ?? widget.artistId!;
 
-    if (widget.artist == null) {
-      Provider.of<ArtistDetailsProvider>(context, listen: false)
-          .fetchArtist(_artistId);
-    }
-
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.artist == null) {
+        Provider.of<ArtistDetailsProvider>(context, listen: false)
+            .fetchArtist(_artistId);
+      }
       Provider.of<ArtistAlbumsProvider>(context, listen: false)
-          .loadMore(_artistId);
+          .loadInitial(_artistId);
       Provider.of<ArtistTracksProvider>(context, listen: false)
-          .loadMore(_artistId);
+          .loadInitial(_artistId);
     });
   }
 
   @override
   void dispose() {
-    Provider.of<ArtistAlbumsProvider>(context, listen: false).reset();
-    Provider.of<ArtistTracksProvider>(context, listen: false).reset();
     super.dispose();
   }
 
@@ -85,7 +82,6 @@ class _ArtistScreenState extends State<ArtistScreen> {
                   ],
                 ),
               ),
-
             const Text('Utwory', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             if (tracksProvider.isLoading && tracksProvider.tracks.isEmpty)
@@ -106,52 +102,51 @@ class _ArtistScreenState extends State<ArtistScreen> {
                   child: const Text('Wczytaj więcej utworów'),
                 ),
               ),
-
-          const SizedBox(height: 24),
-          const Text('Albumy', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          if (albumsProvider.isLoading && albumsProvider.albums.isEmpty)
-            const Center(child: CircularProgressIndicator())
-          else if (albumsProvider.albums.isEmpty)
-            const Text('Brak albumów')
-          else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final crossAxisCount = getCrossAxisCount(constraints.maxWidth);
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    childAspectRatio: 0.8,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                  ),
-                  itemCount: albumsProvider.albums.length,
-                  itemBuilder: (ctx, i) {
-                    final album = albumsProvider.albums[i];
-                    return AlbumGridItem(
-                      album: album,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AlbumDetailScreen(album: album),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
-              },
-            ),
-          if (!albumsProvider.isLoading && albumsProvider.hasMore)
-            Center(
-              child: TextButton(
-                onPressed: () => albumsProvider.loadMore(_artistId),
-                child: const Text('Wczytaj więcej albumów'),
+            const SizedBox(height: 24),
+            const Text('Albumy', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            if (albumsProvider.isLoading && albumsProvider.albums.isEmpty)
+              const Center(child: CircularProgressIndicator())
+            else if (albumsProvider.albums.isEmpty)
+              const Text('Brak albumów')
+            else
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final crossAxisCount = getCrossAxisCount(constraints.maxWidth);
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      childAspectRatio: 0.8,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    itemCount: albumsProvider.albums.length,
+                    itemBuilder: (ctx, i) {
+                      final album = albumsProvider.albums[i];
+                      return AlbumGridItem(
+                        album: album,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AlbumDetailScreen(album: album),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
               ),
-            ),
+            if (!albumsProvider.isLoading && albumsProvider.hasMore)
+              Center(
+                child: TextButton(
+                  onPressed: () => albumsProvider.loadMore(_artistId),
+                  child: const Text('Wczytaj więcej albumów'),
+                ),
+              ),
           ],
         ),
       ),

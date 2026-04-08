@@ -130,7 +130,7 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.refresh),
-                  onPressed: () => provider.fetchTracks(),
+                  onPressed: () => provider.fetchTracks(forceRefresh: true),
                 ),
               ],
             ),
@@ -158,6 +158,8 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
     return RefreshIndicator(
       onRefresh: () => provider.fetchTracks(),
       child: ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.all(8),
         itemCount: provider.tracks.length,
         itemBuilder: (ctx, index) {

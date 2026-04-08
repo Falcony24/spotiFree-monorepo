@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:frontend/services/offline_storage.dart';
 import 'package:frontend/services/api_service.dart';
 import 'package:frontend/models/track.dart';
@@ -47,26 +48,26 @@ class SyncService {
               if (favId != null) await _api.unlikeArtist(favId);
             }
             break;
-case 'playlist':
-  if (action == 'create') {
-    final payload = jsonDecode(item['payload']!);
-    final newPlaylist = await _api.createPlaylist(
-      payload['name'],
-      description: payload['description'],
-      isPublic: payload['is_public'],
-    );
-    final oldId = int.parse(entityId!);
-    final db = await _storage.database;
-    await db.update('playlists', {'id': newPlaylist.id}, where: 'id = ?', whereArgs: [oldId]);
-    await db.update('playlist_tracks', {'playlist_id': newPlaylist.id}, where: 'playlist_id = ?', whereArgs: [oldId]);
-  } else if (action == 'delete') {
-    final playlistId = int.parse(entityId!);
-    if (playlistId > 0) {
-      await _api.deletePlaylist(playlistId);
-    }
-    await _storage.permanentlyDeletePlaylist(playlistId);
-  }
-  break;
+          case 'playlist':
+            if (action == 'create') {
+              final payload = jsonDecode(item['payload']!);
+              final newPlaylist = await _api.createPlaylist(
+                payload['name'],
+                description: payload['description'],
+                isPublic: payload['is_public'],
+              );
+              final oldId = int.parse(entityId!);
+              final db = await _storage.database;
+              await db.update('playlists', {'id': newPlaylist.id}, where: 'id = ?', whereArgs: [oldId]);
+              await db.update('playlist_tracks', {'playlist_id': newPlaylist.id}, where: 'playlist_id = ?', whereArgs: [oldId]);
+            } else if (action == 'delete') {
+              final playlistId = int.parse(entityId!);
+              if (playlistId > 0) {
+                await _api.deletePlaylist(playlistId);
+              }
+              await _storage.permanentlyDeletePlaylist(playlistId);
+            }
+            break;
         }
         await _storage.removeSyncItem(item['id']);
       } catch (e) {
@@ -93,7 +94,14 @@ case 'playlist':
         await _storage.addLikedTrack(item['id'], item['track']);
       }
       for (final item in likedAlbums) {
-        await _storage.addLikedAlbum(int.parse(item['id'].toString()), item['album']);
+        final album = item['album'];
+        await _storage.addLikedAlbum(int.parse(item['id'].toString()), album);
+        try {
+          final tracks = await _api.getAlbumTracks(album.id);
+          await _storage.saveLikedAlbumTracks(album.id, tracks);
+        } catch (e) {
+          debugPrint('Nie udało się pobrać utworów albumu ${album.id} podczas synchronizacji: $e');
+        }
       }
       for (final item in likedArtists) {
         await _storage.addLikedArtist(item['id'], item['artist']);

@@ -88,6 +88,7 @@ class LikedAlbumsProvider extends ChangeNotifier {
           }
         }
         await _storage.removeLikedAlbum(album.id);
+        await _storage.removeLikedAlbumTracks(album.id);
         if (_modeProvider?.isOfflineMode == true) {
           await _storage.addToSyncQueue('liked_album', 'remove', album.id);
         }
@@ -98,6 +99,12 @@ class LikedAlbumsProvider extends ChangeNotifier {
           final newFav = await _api.likeAlbum(album.id);
           newFavId = newFav['id'] as int;
           await _storage.addLikedAlbum(newFavId, album);
+          try {
+            final tracks = await _api.getAlbumTracks(album.id);
+            await _storage.saveLikedAlbumTracks(album.id, tracks);
+          } catch (e) {
+            debugPrint('Nie udało się pobrać utworów albumu: $e');
+          }
           _items.add({
             'id': newFavId.toString(),
             'album': album,

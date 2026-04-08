@@ -93,6 +93,17 @@ class OfflineStorage {
             created_at INTEGER NOT NULL
           )
         ''');
+        await db.execute('''
+          CREATE TABLE liked_album_tracks (
+            album_id TEXT NOT NULL,
+            track_id TEXT NOT NULL,
+            title TEXT NOT NULL,
+            artist TEXT NOT NULL,
+            duration INTEGER,
+            position INTEGER,
+            PRIMARY KEY (album_id, track_id)
+          )
+        ''');
       },
     );
   }
@@ -412,6 +423,57 @@ class OfflineStorage {
       await db.delete('liked_albums');
       await db.delete('liked_artists');
       await db.delete('sync_queue');
+    });
+  }
+
+  Future<void> saveLikedAlbumTracks(String albumId, List<Track> tracks) async {
+    await _lock.synchronized(() async {
+      final db = await database;
+      await db.delete('liked_album_tracks', where: 'album_id = ?', whereArgs: [albumId]);
+      for (int i = 0; i < tracks.length; i++) {
+        final track = tracks[i];
+        await db.insert('liked_album_tracks', {
+          'album_id': albumId,
+          'track_id': track.id,
+          'title': track.title,
+          'artist': track.artist,
+          'duration': track.duration,
+          'position': i,
+        });
+      }
+    });
+  }
+
+  Future<List<Track>> getLikedAlbumTracks(String albumId) async {
+    return await _lock.synchronized(() async {
+      final db = await database;
+      final result = await db.query(
+        'liked_album_tracks',
+        where: 'album_id = ?',
+        whereArgs: [albumId],
+        orderBy: 'position ASC',
+      );
+      return result.map((row) => Track(
+        id: row['track_id'] as String,
+        title: row['title'] as String,
+        artist: row['artist'] as String,
+        duration: row['duration'] as int?,
+      )).toList();
+    });
+  }
+
+  Future<void> removeLikedAlbumTracks(String albumId) async {
+    await _lock.synchronized(() async {
+      final db = await database;
+      await db.delete('liked_album_tracks', where: 'album_id = ?', whereArgs: [albumId]);
+    });
+  }
+
+  Future<bool> isAlbumLiked(String albumId) async {
+    return await _lock.synchronized(() async {
+      final db = await database;
+      final res = await db.query('liked_albums', where: 'album_id = ?', whereArgs: [albumId]);
+      return res.isNotEmpty;
     });
   }
 }

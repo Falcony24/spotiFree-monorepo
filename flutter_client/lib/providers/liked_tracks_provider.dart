@@ -11,37 +11,59 @@ class LikedTracksProvider extends ChangeNotifier {
   ModeProvider? _modeProvider;
 
   List<Map<String, dynamic>> _likedItems = [];
-  bool _isLoading = false;
+  bool _isLoading = false;      
+  bool _isRefreshing = false;   
   String? _error;
 
   List<Map<String, dynamic>> get likedItems => _likedItems;
   bool get isLoading => _isLoading;
+  bool get isRefreshing => _isRefreshing;
   String? get error => _error;
 
   void setModeProvider(ModeProvider modeProvider) {
     _modeProvider = modeProvider;
   }
 
-  Future<void> fetchLikedTracks() async {
-    if (_modeProvider?.isOfflineMode == true) {
+  Future<void> fetchLikedTracks({bool forceRefresh = false}) async {
+    final isOffline = _modeProvider?.isOfflineMode == true;
+
+    if (isOffline) {
       await _loadFromOffline();
       return;
     }
 
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-    try {
-      _likedItems = await _api.getLikedTracks();
+    final cachedItems = await _storage.getLikedTracks();
+    if (!forceRefresh && cachedItems.isNotEmpty) {
+      _likedItems = cachedItems;
+      notifyListeners();
+    } else if (_likedItems.isEmpty) {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+    }
 
-      for (final item in _likedItems) {
+    _isRefreshing = true;
+    notifyListeners();
+
+    try {
+      final freshItems = await _api.getLikedTracks();
+      _likedItems = freshItems;
+      _error = null;
+
+      final allOld = await _storage.getLikedTracks();
+      for (final old in allOld) {
+        await _storage.removeLikedTrack(old['track'].id);
+      }
+      for (final item in freshItems) {
         await _storage.addLikedTrack(item['id'], item['track']);
       }
     } catch (e) {
-      _error = e.toString();
-      await _loadFromOffline();
+      if (_likedItems.isEmpty) {
+        _error = e.toString();
+      }
     } finally {
       _isLoading = false;
+      _isRefreshing = false;
       notifyListeners();
     }
   }
@@ -96,9 +118,13 @@ class LikedTracksProvider extends ChangeNotifier {
         }
         await _storage.addLikedTrack(newFavId, track);
       }
-      await fetchLikedTracks();
+      await fetchLikedTracks(forceRefresh: true);
     } catch (e) {
       debugPrint('Błąd podczas zmiany stanu polubienia: $e');
     }
+  }
+
+  Future<void> refresh() async {
+    await fetchLikedTracks(forceRefresh: true);
   }
 }
