@@ -41,17 +41,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 : ElevatedButton(
                     onPressed: () async {
                       setState(() => _isLoading = true);
+                      final nav = Navigator.of(context);
+                      final messenger = ScaffoldMessenger.of(context);
                       try {
                         await authProvider.register(
                           _usernameController.text.trim(),
                           _passwordController.text.trim(),
                         );
                         if (mounted) {
-                          Navigator.pushReplacementNamed(context, '/');
+                          nav.pushReplacementNamed('/');
                         }
                       } catch (e) {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             SnackBar(content: Text('Błąd rejestracji: $e')),
                           );
                         }

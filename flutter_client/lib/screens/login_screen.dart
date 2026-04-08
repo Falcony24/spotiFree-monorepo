@@ -48,11 +48,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           _usernameController.text.trim(),
                           _passwordController.text.trim(),
                         );
-                        if (mounted) {
+                        if (mounted && context.mounted) {
                           Navigator.pushReplacementNamed(context, '/');
                         }
                       } catch (e) {
-                        if (mounted) {
+                        if (mounted && context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Błąd logowania: $e')),
                           );

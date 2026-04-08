@@ -343,7 +343,7 @@ class ApiService {
   Future<Map<String, dynamic>> search(String query, {String? type, int limit = 20, int offset = 0}) async {
     final uri = Uri.parse('$baseUrl/search').replace(queryParameters: {
       'q': query,
-      if (type != null) 'type': type,
+      'type': ?type,
       'limit': limit.toString(),
       'offset': offset.toString(),
     });
@@ -401,9 +401,9 @@ class ApiService {
     final response = await _http.put(
       Uri.parse('$baseUrl/playlists/$playlistId'),
       body: jsonEncode({
-        if (name != null) 'name': name,
-        if (description != null) 'description': description,
-        if (isPublic != null) 'is_public': isPublic,
+        'name': ?name,
+        'description': ?description,
+        'is_public': ?isPublic,
       }),
     );
     if (response.statusCode == 200) {

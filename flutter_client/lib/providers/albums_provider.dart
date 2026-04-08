@@ -22,7 +22,6 @@ class AlbumsProvider extends ChangeNotifier {
   }
 
   Future<void> fetchAlbums({bool refresh = false}) async {
-    // If offline mode is enabled, do nothing (or show error)
     if (_modeProvider?.isOfflineMode == true) {
       if (_albums.isEmpty && refresh) {
         _isLoading = false;
@@ -38,7 +37,9 @@ class AlbumsProvider extends ChangeNotifier {
       _isLoading = true;
       _isLoadingMore = false;
       notifyListeners();
-    } else if (_isLoadingMore || !_hasMore) return;
+    } else if (_isLoadingMore || !_hasMore) {
+      return;
+    }
 
     _isLoadingMore = true;
     notifyListeners();
@@ -54,7 +55,7 @@ class AlbumsProvider extends ChangeNotifier {
       _currentOffset = _albums.length;
       _hasMore = _albums.length < result['total'];
     } catch (e) {
-      print('Error fetching albums: $e');
+      debugPrint('Error fetching albums: $e');
       _albums = [];
     } finally {
       _isLoading = false;

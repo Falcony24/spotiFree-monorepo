@@ -40,13 +40,17 @@ class TrackTile extends StatelessWidget {
                   Navigator.pop(ctx);
                   try {
                     await ApiService().addTrackToPlaylist(playlist.id, track.id);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Dodano do ${playlist.name}')),
-                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Dodano do ${playlist.name}')),
+                      );
+                    }
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Błąd: $e')),
-                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Błąd: $e')),
+                      );
+                    }
                   }
                 },
               );
@@ -90,19 +94,25 @@ class TrackTile extends StatelessWidget {
                   await ApiService().addTrackToPlaylist(playlist.id, track.id);
                   await Provider.of<PlaylistProvider>(context, listen: false)
                       .fetchPlaylists(refresh: true);
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Utworzono playlistę "$name" i dodano utwór')),
-                  );
+                  if (context.mounted) {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Utworzono playlistę "$name" i dodano utwór')),
+                    );
+                  }
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Błąd: $e')),
-                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Błąd: $e')),
+                    );
+                  }
                 }
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Nazwa nie może być pusta')),
-                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Nazwa nie może być pusta')),
+                  );
+                }
               }
             },
             child: const Text('Utwórz i dodaj'),
@@ -208,13 +218,17 @@ class TrackTile extends StatelessWidget {
                       final service = DownloadService();
                       final filePath = await service.downloadTrack(track);
                       await downloadedProvider.addDownloadedTrack(track, filePath);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Pobrano: ${track.title}')),
-                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Pobrano: ${track.title}')),
+                        );
+                      }
                     } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Błąd pobierania: $e')),
-                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Błąd pobierania: $e')),
+                        );
+                      }
                     }
                   },
                   onDelete: () async {
@@ -224,9 +238,11 @@ class TrackTile extends StatelessWidget {
                       if (await file.exists()) await file.delete();
                     }
                     await downloadedProvider.removeDownloadedTrack(track.id);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Usunięto: ${track.title}')),
-                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Usunięto: ${track.title}')),
+                      );
+                    }
                   },
                 );
               },

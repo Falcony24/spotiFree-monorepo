@@ -71,7 +71,7 @@ class SyncService {
         }
         await _storage.removeSyncItem(item['id']);
       } catch (e) {
-        print('Sync error for ${item['entity_type']} ${item['action']}: $e');
+        debugPrint('Sync error for ${item['entity_type']} ${item['action']}: $e');
       }
     }
   }
@@ -112,7 +112,7 @@ class SyncService {
         await _storage.savePlaylistTracks(playlist.id, detail['tracks']);
       }
     } catch (e) {
-      print('Pull remote data failed: $e');
+      debugPrint('Pull remote data failed: $e');
     }
   }
 }

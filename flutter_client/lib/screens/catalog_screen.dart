@@ -18,9 +18,11 @@ class _CatalogScreenState extends State<CatalogScreen> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      final mode = Provider.of<ModeProvider>(context, listen: false);
-      if (!mode.isOfflineMode) {
-        Provider.of<AlbumsProvider>(context, listen: false).fetchAlbums(refresh: true);
+      if (mounted) {
+        final mode = Provider.of<ModeProvider>(context, listen: false);
+        if (!mode.isOfflineMode) {
+          Provider.of<AlbumsProvider>(context, listen: false).fetchAlbums(refresh: true);
+        }
       }
     });
   }
