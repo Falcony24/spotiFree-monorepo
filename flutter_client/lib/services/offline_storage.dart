@@ -104,6 +104,14 @@ class OfflineStorage {
             PRIMARY KEY (album_id, track_id)
           )
         ''');
+        
+        await db.execute('CREATE INDEX idx_playlists_deleted ON playlists(deleted)');
+        await db.execute('CREATE INDEX idx_playlist_tracks_playlist_id ON playlist_tracks(playlist_id)');
+        await db.execute('CREATE INDEX idx_liked_tracks_track_id ON liked_tracks(track_id)');
+        await db.execute('CREATE INDEX idx_liked_albums_album_id ON liked_albums(album_id)');
+        await db.execute('CREATE INDEX idx_liked_artists_artist_id ON liked_artists(artist_id)');
+        await db.execute('CREATE INDEX idx_sync_queue_created_at ON sync_queue(created_at)');
+        await db.execute('CREATE INDEX idx_liked_album_tracks_album_id ON liked_album_tracks(album_id)');
       },
     );
   }
