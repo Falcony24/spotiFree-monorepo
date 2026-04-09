@@ -21,7 +21,7 @@ class PlaylistTracksProvider extends ChangeNotifier {
     _modeProvider = modeProvider;
   }
 
-  Future<void> loadTracks(int playlistId) async {
+  Future<void> loadTracks(String playlistId) async {
     if (_modeProvider?.isOfflineMode == true) {
       await _loadFromOffline(playlistId);
       return;
@@ -44,7 +44,7 @@ class PlaylistTracksProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _loadFromOffline(int playlistId) async {
+  Future<void> _loadFromOffline(String playlistId) async {
     _isLoading = true;
     _error = null;
     notifyListeners();

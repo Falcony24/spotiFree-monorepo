@@ -34,7 +34,7 @@ class LikedAlbumsProvider extends ChangeNotifier {
     try {
       _items = await _api.getLikedAlbums();
       for (final item in _items) {
-        await _storage.addLikedAlbum(int.parse(item['id'].toString()), item['album']);
+        await _storage.addLikedAlbum(item['id'], item['album']);
       }
     } catch (e) {
       _error = e.toString();
@@ -84,7 +84,7 @@ class LikedAlbumsProvider extends ChangeNotifier {
         if (_modeProvider?.isOfflineMode != true) {
           final favId = getFavoriteId(album.id);
           if (favId != null) {
-            await _api.unlikeAlbumById(int.parse(favId));
+            await _api.unlikeAlbumById(favId);
           }
         }
         await _storage.removeLikedAlbum(album.id);
@@ -94,10 +94,10 @@ class LikedAlbumsProvider extends ChangeNotifier {
         }
         _items.removeWhere((item) => item['album'].id == album.id);
       } else {
-        int newFavId;
+        String newFavId;
         if (_modeProvider?.isOfflineMode != true) {
           final newFav = await _api.likeAlbum(album.id);
-          newFavId = newFav['id'] as int;
+          newFavId = newFav['id'].toString();;
           await _storage.addLikedAlbum(newFavId, album);
           try {
             final tracks = await _api.getAlbumTracks(album.id);
@@ -110,7 +110,7 @@ class LikedAlbumsProvider extends ChangeNotifier {
             'album': album,
           });
         } else {
-          newFavId = -1;
+          newFavId = 'local_${DateTime.now().millisecondsSinceEpoch}';
           await _storage.addLikedAlbum(newFavId, album);
           await _storage.addToSyncQueue('liked_album', 'add', album.id);
           _items.add({
@@ -120,9 +120,7 @@ class LikedAlbumsProvider extends ChangeNotifier {
         }
       }
       notifyListeners();
-    } catch (e, stack) {
-      debugPrint('Błąd podczas zmiany stanu polubienia: $e');
-      debugPrint('Stack trace: $stack');
+    } catch (e) {
       if (e.toString().contains('Failed to like album')) {
       }
     }

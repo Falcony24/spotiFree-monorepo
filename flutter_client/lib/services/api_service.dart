@@ -102,7 +102,7 @@ class ApiService {
     }
   }
 
-  Future<void> deletePlaylist(int playlistId) async {
+  Future<void> deletePlaylist(String playlistId) async {
     final response = await _http.delete(
       Uri.parse('$baseUrl/playlists/$playlistId'),
     );
@@ -111,7 +111,7 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> getPlaylistDetail(int playlistId) async {
+  Future<Map<String, dynamic>> getPlaylistDetail(String playlistId) async {
     final response = await _http.get(
       Uri.parse('$baseUrl/playlists/$playlistId'),
     );
@@ -127,7 +127,7 @@ class ApiService {
     }
   }
 
-  Future<void> addTrackToPlaylist(int playlistId, String trackMbid) async {
+  Future<void> addTrackToPlaylist(String playlistId, String trackMbid) async {
     final response = await _http.post(
       Uri.parse('$baseUrl/playlists/$playlistId/tracks'),
       body: jsonEncode({'track_mbid': trackMbid}),
@@ -289,7 +289,7 @@ class ApiService {
     }
   }
 
-  Future<void> unlikeTrack(int favoriteId) async {
+  Future<void> unlikeTrack(String favoriteId) async {
     final response = await _http.delete(
       Uri.parse('$baseUrl/favorites/$favoriteId'),
     );
@@ -310,7 +310,7 @@ class ApiService {
     }
   }
 
-  Future<void> unlikeAlbumById(int favoriteId) async {
+  Future<void> unlikeAlbumById(String favoriteId) async {
     final response = await _http.delete(
       Uri.parse('$baseUrl/favorites/$favoriteId'),
     );
@@ -331,7 +331,7 @@ class ApiService {
     }
   }
 
-  Future<void> unlikeArtist(int favoriteId) async {
+  Future<void> unlikeArtist(String favoriteId) async {
     final response = await _http.delete(
       Uri.parse('$baseUrl/favorites/$favoriteId'),
     );
@@ -378,7 +378,7 @@ class ApiService {
     }
   }
 
-  Future<void> removeTrackFromPlaylist(int playlistId, String trackMbid) async {
+  Future<void> removeTrackFromPlaylist(String playlistId, String trackMbid) async {
     final response = await _http.delete(
       Uri.parse('$baseUrl/playlists/$playlistId/tracks/$trackMbid'),
     );
@@ -387,7 +387,7 @@ class ApiService {
     }
   }
 
-  Future<void> reorderPlaylistTracks(int playlistId, List<Map<String, dynamic>> newOrder) async {
+  Future<void> reorderPlaylistTracks(String playlistId, List<Map<String, dynamic>> newOrder) async {
     final response = await _http.put(
       Uri.parse('$baseUrl/playlists/$playlistId/tracks/reorder'),
       body: jsonEncode(newOrder),
@@ -397,7 +397,7 @@ class ApiService {
     }
   }
 
-  Future<Playlist> updatePlaylist(int playlistId, {String? name, String? description, bool? isPublic}) async {
+  Future<Playlist> updatePlaylist(String playlistId, {String? name, String? description, bool? isPublic}) async {
     final response = await _http.put(
       Uri.parse('$baseUrl/playlists/$playlistId'),
       body: jsonEncode({

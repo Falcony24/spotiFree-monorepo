@@ -67,10 +67,8 @@ class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
   }
 
   void _navigateToPlaylist(Playlist playlist) {
-    final id = playlist.id.toString();
-    if (_currentPlaylistId == id) {
-      return;
-    }
+    final id = playlist.id;
+    if (_currentPlaylistId == id) return;
     _currentPlaylistId = id;
     _navigatorKey.currentState?.pushNamed('/playlist', arguments: playlist).then((_) {
       if (_currentPlaylistId == id) _currentPlaylistId = null;

@@ -225,7 +225,6 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
         _pollTask(e.taskId, track);
       }
     } catch (e) {
-      debugPrint('Player error: $e');
       scaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(content: Text('Nie można odtworzyć utworu: $e')),
       );

@@ -19,7 +19,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.playlist.id != -1) {
+    if (widget.playlist.id != 'liked_tracks') {
       Future.microtask(() {
         Provider.of<PlaylistTracksProvider>(context, listen: false)
             .loadTracks(widget.playlist.id);
@@ -28,7 +28,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   }
 
   Future<void> _refresh() async {
-    if (widget.playlist.id != -1) {
+    if (widget.playlist.id != 'liked_tracks') {
       await Provider.of<PlaylistTracksProvider>(context, listen: false)
           .loadTracks(widget.playlist.id);
     } else {
@@ -39,7 +39,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.playlist.id == -1) {
+    if (widget.playlist.id == 'liked_tracks') {
       return Consumer<LikedTracksProvider>(
         builder: (context, likedProvider, child) {
           final likedTracks = likedProvider.likedItems

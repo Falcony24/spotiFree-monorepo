@@ -1,5 +1,5 @@
 class Playlist {
-  final int id;     //MBID
+  final String id;     //GUID
   final String name;
   final String? description;
   final bool isPublic;
@@ -17,7 +17,7 @@ class Playlist {
 
   factory Playlist.fromJson(Map<String, dynamic> json) {
     return Playlist(
-      id: json['id'],
+      id: json['id'].toString(),   
       name: json['name'],
       description: json['description'],
       isPublic: json['is_public'],

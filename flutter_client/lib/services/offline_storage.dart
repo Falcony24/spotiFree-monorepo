@@ -24,7 +24,7 @@ class OfflineStorage {
     final path = join(await getDatabasesPath(), 'spotifree_offline.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE downloaded_tracks (
@@ -38,7 +38,7 @@ class OfflineStorage {
         ''');
         await db.execute('''
           CREATE TABLE playlists (
-            id INTEGER PRIMARY KEY,
+            id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
             description TEXT,
             is_public INTEGER NOT NULL,
@@ -57,7 +57,7 @@ class OfflineStorage {
         ''');
         await db.execute('''
           CREATE TABLE liked_tracks (
-            favorite_id INTEGER,
+            favorite_id TEXT,
             track_id TEXT PRIMARY KEY,
             title TEXT,
             artist TEXT,
@@ -67,7 +67,7 @@ class OfflineStorage {
         ''');
         await db.execute('''
           CREATE TABLE liked_albums (
-            favorite_id INTEGER,
+            favorite_id TEXT,
             album_id TEXT PRIMARY KEY,
             title TEXT,
             artist TEXT,
@@ -76,7 +76,7 @@ class OfflineStorage {
         ''');
         await db.execute('''
           CREATE TABLE liked_artists (
-            favorite_id INTEGER,
+            favorite_id TEXT,
             artist_id TEXT PRIMARY KEY,
             name TEXT,
             sort_name TEXT,
@@ -177,7 +177,7 @@ class OfflineStorage {
       final db = await database;
       final maps = await db.query('playlists', where: 'deleted = 0');
       return maps.map((m) => Playlist(
-        id: m['id'] as int,
+        id: m['id'] as String,
         name: m['name'] as String,
         description: m['description'] as String?,
         isPublic: (m['is_public'] as int) == 1,
@@ -186,15 +186,15 @@ class OfflineStorage {
     });
   }
 
-  Future<void> markPlaylistAsDeleted(int id) async {
+  Future<void> markPlaylistAsDeleted(String id) async {
     await _lock.synchronized(() async {
       final db = await database;
       await db.update('playlists', {'deleted': 1}, where: 'id = ?', whereArgs: [id]);
-      await addToSyncQueue('playlist', 'delete', id.toString());
+      await addToSyncQueue('playlist', 'delete', id);
     });
   }
 
-  Future<void> permanentlyDeletePlaylist(int id) async {
+  Future<void> permanentlyDeletePlaylist(String id) async {
     await _lock.synchronized(() async {
       final db = await database;
       await db.delete('playlists', where: 'id = ?', whereArgs: [id]);
@@ -202,7 +202,7 @@ class OfflineStorage {
     });
   }
 
-  Future<void> savePlaylistTracks(int playlistId, List<Track> tracks) async {
+  Future<void> savePlaylistTracks(String playlistId, List<Track> tracks) async {
     await _lock.synchronized(() async {
       final db = await database;
       await db.delete('playlist_tracks', where: 'playlist_id = ?', whereArgs: [playlistId]);
@@ -217,7 +217,7 @@ class OfflineStorage {
     });
   }
 
-  Future<List<Track>> getPlaylistTracks(int playlistId) async {
+  Future<List<Track>> getPlaylistTracks(String playlistId) async {
     return await _lock.synchronized(() async {
       final db = await database;
       final result = await db.rawQuery('''
@@ -248,7 +248,7 @@ class OfflineStorage {
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
-  Future<void> addLikedTrack(int favoriteId, Track track) async {
+  Future<void> addLikedTrack(String favoriteId, Track track) async {
     await _lock.synchronized(() async {
       final db = await database;
       await db.insert('liked_tracks', {
@@ -262,10 +262,10 @@ class OfflineStorage {
     });
   }
 
-  Future<void> removeLikedTrack(String trackId) async {
+  Future<void> removeLikedTrack(String favoriteId) async {
     await _lock.synchronized(() async {
       final db = await database;
-      await db.delete('liked_tracks', where: 'track_id = ?', whereArgs: [trackId]);
+      await db.delete('liked_tracks', where: 'favorite_id = ?', whereArgs: [favoriteId]);
     });
   }
 
@@ -274,7 +274,7 @@ class OfflineStorage {
       final db = await database;
       final maps = await db.query('liked_tracks');
       return maps.map((m) => {
-        'id': m['favorite_id'],
+        'id': m['favorite_id'] as String,
         'track': Track(
           id: m['track_id'] as String,
           title: m['title'] as String,
@@ -293,16 +293,16 @@ class OfflineStorage {
     });
   }
 
-  Future<int?> getFavoriteIdForTrack(String trackId) async {
+  Future<String?> getFavoriteIdForTrack(String trackId) async {
     return await _lock.synchronized(() async {
       final db = await database;
       final res = await db.query('liked_tracks', where: 'track_id = ?', whereArgs: [trackId]);
-      if (res.isNotEmpty) return res.first['favorite_id'] as int?;
+      if (res.isNotEmpty) return res.first['favorite_id'] as String?;
       return null;
     });
   }
 
-  Future<void> addLikedAlbum(int favoriteId, Album album) async {
+  Future<void> addLikedAlbum(String favoriteId, Album album) async {
     await _lock.synchronized(() async {
       final db = await database;
       await db.insert('liked_albums', {
@@ -334,16 +334,16 @@ class OfflineStorage {
     });
   }
 
-  Future<int?> getFavoriteIdForAlbum(String albumId) async {
+  Future<String?> getFavoriteIdForAlbum(String albumId) async {
     return await _lock.synchronized(() async {
       final db = await database;
       final res = await db.query('liked_albums', where: 'album_id = ?', whereArgs: [albumId]);
-      if (res.isNotEmpty) return res.first['favorite_id'] as int?;
+      if (res.isNotEmpty) return res.first['favorite_id'] as String?;
       return null;
     });
   }
 
-  Future<void> addLikedArtist(int favoriteId, Artist artist) async {
+  Future<void> addLikedArtist(String favoriteId, Artist artist) async {
     await _lock.synchronized(() async {
       final db = await database;
       await db.insert('liked_artists', {
@@ -375,11 +375,11 @@ class OfflineStorage {
     });
   }
 
-  Future<int?> getFavoriteIdForArtist(String artistId) async {
+  Future<String?> getFavoriteIdForArtist(String artistId) async {
     return await _lock.synchronized(() async {
       final db = await database;
       final res = await db.query('liked_artists', where: 'artist_id = ?', whereArgs: [artistId]);
-      if (res.isNotEmpty) return res.first['favorite_id'] as int?;
+      if (res.isNotEmpty) return res.first['favorite_id'] as String?;
       return null;
     });
   }

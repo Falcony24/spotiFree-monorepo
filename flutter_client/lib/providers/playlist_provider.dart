@@ -127,18 +127,14 @@ class PlaylistProvider extends ChangeNotifier {
     await fetchPlaylists(refresh: true);
   }
 
-  Future<void> deletePlaylist(int playlistId) async {
+  Future<void> deletePlaylist(String playlistId) async {
     final isOffline = _modeProvider?.isOfflineMode == true;
     try {
       if (!isOffline) {
         await _api.deletePlaylist(playlistId);
         await _storage.permanentlyDeletePlaylist(playlistId);
       } else {
-        if (playlistId > 0) {
-          await _storage.markPlaylistAsDeleted(playlistId);
-        } else {
-          await _storage.permanentlyDeletePlaylist(playlistId);
-        }
+        await _storage.markPlaylistAsDeleted(playlistId);
       }
       _playlists.removeWhere((p) => p.id == playlistId);
       notifyListeners();
@@ -157,7 +153,7 @@ class PlaylistProvider extends ChangeNotifier {
         notifyListeners();
         return playlist;
       } else {
-        final tempId = -DateTime.now().millisecondsSinceEpoch;
+        final tempId = 'local_${DateTime.now().millisecondsSinceEpoch}';
         final playlist = Playlist(
           id: tempId,
           name: name,
@@ -166,7 +162,7 @@ class PlaylistProvider extends ChangeNotifier {
           userId: 0,
         );
         await _storage.insertPlaylist(playlist);
-        await _storage.addToSyncQueue('playlist', 'create', tempId.toString(),
+        await _storage.addToSyncQueue('playlist', 'create', tempId,
             payload: jsonEncode({'name': name, 'description': description, 'is_public': isPublic}));
         _playlists.add(playlist);
         notifyListeners();

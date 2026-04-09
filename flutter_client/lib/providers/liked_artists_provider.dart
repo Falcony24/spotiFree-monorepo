@@ -68,10 +68,10 @@ class LikedArtistsProvider extends ChangeNotifier {
     return _items.any((item) => item['artist'].id == artistId);
   }
 
-  int? getFavoriteId(String artistId) {
+  String? getFavoriteId(String artistId) {
     for (final item in _items) {
       if (item['artist'].id == artistId) {
-        return item['id'] as int?;
+        return item['id'] as String?;
       }
     }
     return null;
@@ -91,12 +91,12 @@ class LikedArtistsProvider extends ChangeNotifier {
         }
         _items.removeWhere((item) => item['artist'].id == artist.id);
       } else {
-        int newFavId;
+        String newFavId;
         if (_modeProvider?.isOfflineMode != true) {
           final newFav = await _api.likeArtist(artist.id);
           newFavId = newFav['id'];
         } else {
-          newFavId = -1;
+          newFavId = 'local_${DateTime.now().millisecondsSinceEpoch}';
           await _storage.addToSyncQueue('liked_artist', 'add', artist.id);
         }
         await _storage.addLikedArtist(newFavId, artist);

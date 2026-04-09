@@ -90,7 +90,7 @@ class LikedTracksProvider extends ChangeNotifier {
     return _likedItems.any((item) => item['track']?.id == trackMbid);
   }
 
-  Future<int?> getFavoriteId(String trackMbid) async {
+  Future<String?> getFavoriteId(String trackMbid) async {
     return await _storage.getFavoriteIdForTrack(trackMbid);
   }
 
@@ -106,19 +106,20 @@ class LikedTracksProvider extends ChangeNotifier {
         if (_modeProvider?.isOfflineMode == true) {
           await _storage.addToSyncQueue('liked_track', 'remove', track.id);
         }
+        await fetchLikedTracks(forceRefresh: true);
       } else {
-        int newFavId;
+        String newFavId;
         if (_modeProvider?.isOfflineMode != true) {
           final newFav = await _api.likeTrack(track.id);
-          newFavId = newFav['id'];
+          newFavId = newFav['id'].toString();
         } else {
-          newFavId = -1;
+          newFavId = 'local_${DateTime.now().millisecondsSinceEpoch}';
           await _storage.addToSyncQueue('liked_track', 'add', track.id,
               payload: jsonEncode(track.toJson()));
         }
         await _storage.addLikedTrack(newFavId, track);
+        await fetchLikedTracks(forceRefresh: true);
       }
-      await fetchLikedTracks(forceRefresh: true);
     } catch (e) {
       debugPrint('Błąd podczas zmiany stanu polubienia: $e');
     }

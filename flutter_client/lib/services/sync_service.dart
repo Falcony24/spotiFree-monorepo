@@ -56,13 +56,13 @@ class SyncService {
                 description: payload['description'],
                 isPublic: payload['is_public'],
               );
-              final oldId = int.parse(entityId!);
+              final oldId = entityId!; // String
               final db = await _storage.database;
               await db.update('playlists', {'id': newPlaylist.id}, where: 'id = ?', whereArgs: [oldId]);
               await db.update('playlist_tracks', {'playlist_id': newPlaylist.id}, where: 'playlist_id = ?', whereArgs: [oldId]);
             } else if (action == 'delete') {
-              final playlistId = int.parse(entityId!);
-              if (playlistId > 0) {
+              final playlistId = entityId!;
+              if (playlistId.isNotEmpty && !playlistId.startsWith('local_')) {
                 await _api.deletePlaylist(playlistId);
               }
               await _storage.permanentlyDeletePlaylist(playlistId);
@@ -95,7 +95,7 @@ class SyncService {
       }
       for (final item in likedAlbums) {
         final album = item['album'];
-        await _storage.addLikedAlbum(int.parse(item['id'].toString()), album);
+        await _storage.addLikedAlbum(item['id'], album);
         try {
           final tracks = await _api.getAlbumTracks(album.id);
           await _storage.saveLikedAlbumTracks(album.id, tracks);

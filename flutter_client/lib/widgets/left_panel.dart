@@ -159,7 +159,7 @@ class _LeftPanelState extends State<LeftPanel> {
             IconButton(
               icon: const Icon(Icons.favorite, color: Colors.green),
               onPressed: () => widget.onPlaylistSelected(Playlist(
-                id: -1,
+                id: 'liked_tracks',   
                 name: 'Polubione utwory',
                 description: 'Twoje ulubione utwory',
                 isPublic: false,
@@ -182,7 +182,7 @@ class _LeftPanelState extends State<LeftPanel> {
               leading: const Icon(Icons.favorite, color: Colors.green),
               title: const Text('Polubione utwory'),
               onTap: () => widget.onPlaylistSelected(Playlist(
-                id: -1,
+                id: 'liked_tracks',   
                 name: 'Polubione utwory',
                 description: 'Twoje ulubione utwory',
                 isPublic: false,
