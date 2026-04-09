@@ -1,7 +1,8 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { User, RefreshToken } from '../models/index.js';
-import Op from 'sequelize'; 
+import { Op } from 'sequelize'; 
+import { v4 as uuidv4 } from 'uuid';
 
 const generateTokens = async (user) => {
   const accessToken = jwt.sign(
@@ -11,7 +12,10 @@ const generateTokens = async (user) => {
   );
 
   const refreshToken = jwt.sign(
-    { userId: user.id },
+    { 
+      userId: user.id,
+      jti: uuidv4() 
+     },
     process.env.JWT_REFRESH_SECRET,
     { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN }
   );
@@ -53,6 +57,11 @@ export const register = async (req, res, next) => {
 export const login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ error: 'username and password required' });
+    }
+
     const user = await User.findOne({ where: { username } });
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -82,9 +91,10 @@ export const refresh = async (req, res, next) => {
       where: {
         token: refreshToken,
         user_id: payload.userId,
-        expires_at: { [Op.gt]: new Date() } 
+        expires_at: { [Op.gt]: new Date() }
       }
     });
+
     if (!tokenRecord) {
       return res.status(401).json({ error: 'Invalid refresh token' });
     }
