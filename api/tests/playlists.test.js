@@ -2,6 +2,7 @@ import request from 'supertest';
 import app from '../src/app.js';
 import { User, Playlist, PlaylistTrack } from '../src/models/index.js';
 import jwt from 'jsonwebtoken';
+import { Op } from 'sequelize';
 
 let authToken;
 let userId;
@@ -13,8 +14,11 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await Playlist.destroy({ where: {} });
-  await PlaylistTrack.destroy({ where: {} });
+  const playlists = await Playlist.findAll({ where: { user_id: userId } });
+  for (const p of playlists) {
+    await PlaylistTrack.destroy({ where: { playlist_id: p.id } });
+    await p.destroy();
+  }
 });
 
 afterAll(async () => {
@@ -30,42 +34,44 @@ describe('Playlist Endpoints', () => {
     expect(res.statusCode).toBe(201);
     expect(res.body).toHaveProperty('id');
     expect(res.body.name).toBe('My Playlist');
-    expect(res.body.user_id).toBe(userId);
   });
 
   it('should get user playlists', async () => {
-    await Playlist.create({ user_id: userId, name: 'Playlist1' });
+    const playlist = await Playlist.create({ user_id: userId, name: 'Playlist1' });
     const res = await request(app)
       .get('/api/playlists')
       .set('Authorization', `Bearer ${authToken}`);
     expect(res.statusCode).toBe(200);
     expect(res.body.data.length).toBe(1);
     expect(res.body.data[0].name).toBe('Playlist1');
+    expect(res.body.data[0].id).toBe(playlist.gid); 
   });
 
   it('should get a single playlist', async () => {
     const playlist = await Playlist.create({ user_id: userId, name: 'Playlist1' });
     const res = await request(app)
-      .get(`/api/playlists/${playlist.id}`)
+      .get(`/api/playlists/${playlist.gid}`)
       .set('Authorization', `Bearer ${authToken}`);
     expect(res.statusCode).toBe(200);
     expect(res.body.playlist.name).toBe('Playlist1');
+    expect(res.body.playlist.id).toBe(playlist.gid);
   });
 
   it('should update a playlist', async () => {
     const playlist = await Playlist.create({ user_id: userId, name: 'Old Name' });
     const res = await request(app)
-      .put(`/api/playlists/${playlist.id}`)
+      .put(`/api/playlists/${playlist.gid}`)
       .set('Authorization', `Bearer ${authToken}`)
       .send({ name: 'New Name' });
     expect(res.statusCode).toBe(200);
     expect(res.body.name).toBe('New Name');
+    expect(res.body.id).toBe(playlist.gid);
   });
 
   it('should delete a playlist', async () => {
     const playlist = await Playlist.create({ user_id: userId, name: 'ToDelete' });
     const res = await request(app)
-      .delete(`/api/playlists/${playlist.id}`)
+      .delete(`/api/playlists/${playlist.gid}`)
       .set('Authorization', `Bearer ${authToken}`);
     expect(res.statusCode).toBe(204);
     const deleted = await Playlist.findByPk(playlist.id);

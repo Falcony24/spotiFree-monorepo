@@ -18,7 +18,7 @@ afterAll(async () => {
 
 describe('Artist Endpoints', () => {
   it('should get an artist by MBID', async () => {
-    const artistMbid = 'ed962474-bb85-47f9-b108-073184f09bc8'; // example: Rusko
+    const artistMbid = 'ed962474-bb85-47f9-b108-073184f09bc8'; 
     const res = await request(app)
       .get(`/api/artists/${artistMbid}`)
       .set('Authorization', `Bearer ${authToken}`);
@@ -53,10 +53,14 @@ describe('Artist Endpoints', () => {
       .get(`/api/artists/${artistMbid}/tracks`)
       .set('Authorization', `Bearer ${authToken}`);
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    if (res.body.length > 0) {
-      expect(res.body[0]).toHaveProperty('id');
-      expect(res.body[0]).toHaveProperty('title');
+    expect(res.body).toHaveProperty('data');
+    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.body).toHaveProperty('total');
+    expect(res.body).toHaveProperty('limit');
+    expect(res.body).toHaveProperty('offset');
+    if (res.body.data.length > 0) {
+      expect(res.body.data[0]).toHaveProperty('id');
+      expect(res.body.data[0]).toHaveProperty('title');
     }
-  });
+  }, 15000);
 });

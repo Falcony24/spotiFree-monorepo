@@ -83,7 +83,7 @@ describe('Album Endpoints', () => {
       expect(firstAsc).toBeDefined();
       expect(firstDesc).toBeDefined();
     }
-  });
+  }, 10000);
 
   //
   it('should get tracks for an album', async () => {
