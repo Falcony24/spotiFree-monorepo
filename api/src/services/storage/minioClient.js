@@ -46,10 +46,23 @@ export const uploadBuffer = async (objectKey, buffer, metadata = {}) => {
 
 export const getObjectMetadata = async (objectKey) => {
   const stat = await internalMinioClient.statObject(BUCKET_NAME, objectKey);
+  
+  const decodeHeader = (val) => {
+    if (!val) return val;
+    try {
+      return decodeURIComponent(val);
+    } catch {
+      return val; 
+    }
+  };
+  
   return {
     contentType: stat.metaData?.['content-type'],
     ext: objectKey.split('.').pop(),
     size: stat.size,
+    title: decodeHeader(stat.metaData?.['title']),
+    artist: decodeHeader(stat.metaData?.['artist']),
+    duration: stat.metaData?.['duration'],
   };
 };
 

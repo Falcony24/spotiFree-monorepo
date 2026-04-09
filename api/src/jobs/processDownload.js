@@ -34,10 +34,15 @@ export default async function processDownloadJob(job) {
     console.log(`Downloaded to ${tempFilePath}`);
 
     const objectKey = `audio/${trackMbid}.mp3`;
+    const encodeHeaderValue = (value) => {
+      if (!value) return '';
+      return /[^\x00-\x7F]/.test(value) ? encodeURIComponent(value) : value;
+    };
+
     await uploadFile(objectKey, tempFilePath, {
       'Content-Type': 'audio/mpeg',
-      'x-amz-meta-title': metadata.title,
-      'x-amz-meta-artist': metadata.artist,
+      'x-amz-meta-title': encodeHeaderValue(metadata.title),
+      'x-amz-meta-artist': encodeHeaderValue(metadata.artist),
       'x-amz-meta-duration': metadata.duration?.toString() || ''
     });
 
