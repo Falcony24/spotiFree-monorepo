@@ -46,26 +46,31 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
   Timer? _saveTimer;
   bool _isRestoring = false;
 
+  StreamSubscription? _positionSubscription;
+  StreamSubscription? _durationSubscription;
+  StreamSubscription? _playingSubscription;
+  StreamSubscription? _completeSubscription;
+
   PlayerProvider() {
     _initPrefs();
     _playerService.init();
-    _playerService.onPosition.listen((pos) {
+    _positionSubscription = _playerService.onPosition.listen((pos) {
       _position = pos;
       notifyListeners();
       _debounceSavePosition();
     });
-    _playerService.onDuration.listen((dur) {
+    _durationSubscription = _playerService.onDuration.listen((dur) {
       _duration = dur;
       notifyListeners();
     });
-    _playerService.onPlaying.listen((playing) {
+    _playingSubscription = _playerService.onPlaying.listen((playing) {
       _isPlaying = playing;
       if (!playing) {
         _saveCurrentState();
       }
       notifyListeners();
     });
-    _playerService.onComplete.listen((_) {
+    _completeSubscription = _playerService.onComplete.listen((_) {
       if (hasNext) {
         next();
       } else {
@@ -345,17 +350,21 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   @override
-  void dispose() {
-    _saveTimer?.cancel();
-    WidgetsBinding.instance.removeObserver(this);
-    _playerService.dispose();
-    super.dispose();
-  }
-
-  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
       _saveCurrentState();
     }
+  }
+
+  @override
+  void dispose() {
+    _saveTimer?.cancel();
+    _positionSubscription?.cancel();
+    _durationSubscription?.cancel();
+    _playingSubscription?.cancel();
+    _completeSubscription?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    _playerService.dispose();
+    super.dispose();
   }
 }
