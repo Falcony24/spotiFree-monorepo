@@ -7,6 +7,12 @@ const DownloadTask = sequelize.define('DownloadTask', {
     primaryKey: true,
     autoIncrement: true
   },
+  gid: { 
+    type: DataTypes.UUID, 
+    defaultValue: DataTypes.UUIDV4, 
+    allowNull: false, 
+    unique: true 
+  },
   track_mbid: {
     type: DataTypes.UUID,
     allowNull: false,

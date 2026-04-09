@@ -32,7 +32,7 @@ export const getFavorites = async (req, res, next) => {
         const rec = recordingMap[fav.track_id];
         if (!rec) return null;
         return {
-          id: fav.id,
+          id: fav.gid,
           track: {
             id: rec.gid,
             title: rec.name,
@@ -64,7 +64,7 @@ export const getFavorites = async (req, res, next) => {
         const album = albumMap[fav.album_id];
         if (!album) return null;
         return {
-          id: fav.id,
+          id: fav.gid,
           album: {
             id: album.gid,
             title: album.name,
@@ -94,7 +94,7 @@ export const getFavorites = async (req, res, next) => {
         const artist = artistMap[fav.artist_id];
         if (!artist) return null;
         return {
-          id: fav.id,
+          id: fav.gid,
           artist: {
             id: artist.gid,
             name: artist.name,
@@ -131,7 +131,7 @@ export const addFavorite = async (req, res, next) => {
       if (!created) {
         return res.status(409).json({ error: 'Already favorite' });
       }
-      return res.status(201).json({ id: favorite.id, track: { id: recording.gid }, created_at: favorite.created_at });
+      return res.status(201).json({ id: favorite.gid, track: { id: recording.gid }, created_at: favorite.created_at });
     }
 
     if (item_type === 'album') {
@@ -145,7 +145,7 @@ export const addFavorite = async (req, res, next) => {
       if (!created) {
         return res.status(409).json({ error: 'Already favorite' });
       }
-      return res.status(201).json({ id: favorite.id, album: { id: album.gid }, created_at: favorite.created_at });
+      return res.status(201).json({ id: favorite.gid, album: { id: album.gid }, created_at: favorite.created_at });
     }
 
     if (item_type === 'artist') {
@@ -159,7 +159,7 @@ export const addFavorite = async (req, res, next) => {
       if (!created) {
         return res.status(409).json({ error: 'Already favorite' });
       }
-      return res.status(201).json({ id: favorite.id, artist: { id: artist.gid }, created_at: favorite.created_at });
+      return res.status(201).json({ id: favorite.gid, artist: { id: artist.gid }, created_at: favorite.created_at });
     }
   } catch (err) {
     next(err);
@@ -171,9 +171,9 @@ export const deleteFavorite = async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    let favorite = await FavoriteArtist.findOne({ where: { id, user_id: userId } });
-    if (!favorite) favorite = await FavoriteAlbum.findOne({ where: { id, user_id: userId } });
-    if (!favorite) favorite = await FavoriteTrack.findOne({ where: { id, user_id: userId } });
+    let favorite = await FavoriteArtist.findOne({ where: { gid: id, user_id: userId } });
+    if (!favorite) favorite = await FavoriteAlbum.findOne({ where: { gid: id, user_id: userId } });
+    if (!favorite) favorite = await FavoriteTrack.findOne({ where: { gid: id, user_id: userId } });
 
     if (!favorite) {
       return res.status(404).json({ error: 'Favorite not found' });

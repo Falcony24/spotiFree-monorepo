@@ -4,10 +4,13 @@ import sequelize from '../config/database.js';
 
 export const getCurrentUser = async (req, res, next) => {
   try {
-    
-    const user = await req.user.toJSON(); 
-    delete user.password_hash;
-    res.json(user);
+    const user = req.user;
+    res.json({
+      id: user.gid,
+      username: user.username,
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    });
   } catch (err) {
     next(err);
   }
@@ -15,14 +18,16 @@ export const getCurrentUser = async (req, res, next) => {
 
 export const updateProfile = async (req, res, next) => {
   try {
-    const { display_name, email } = req.body;
+    const { username } = req.body;  
     const user = req.user;
-    if (display_name !== undefined) user.display_name = display_name;
-    if (email !== undefined) user.email = email;
+    if (username !== undefined) user.username = username;
     await user.save();
-    const userJson = user.toJSON();
-    delete userJson.password_hash;
-    res.json(userJson);
+    res.json({
+      id: user.gid,
+      username: user.username,
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    });
   } catch (err) {
     next(err);
   }

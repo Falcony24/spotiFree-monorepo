@@ -74,23 +74,28 @@ export const getArtistTracks = async (req, res, next) => {
       return res.json({ data: [], total: 0, limit, offset });
     }
 
-    const { count, rows: tracks } = await Recording.findAndCountAll({
+    const total = await Recording.count({
+      where: { artist_credit: { [Op.in]: creditIds } },
+      distinct: true,
+    });
+
+    const tracks = await Recording.findAll({
       where: { artist_credit: { [Op.in]: creditIds } },
       include: [{ model: ArtistCredit, as: 'artistCredit', attributes: ['name'] }],
       limit,
       offset,
       order: [['name', 'ASC']],
-      distinct: true
+      subQuery: false, 
     });
 
     const mapped = tracks.map(track => ({
       id: track.gid,
       title: track.name,
       artist: track.artistCredit?.name,
-      duration: track.length
+      duration: track.length,
     }));
 
-    res.json({ data: mapped, total: count, limit, offset });
+    res.json({ data: mapped, total, limit, offset });
   } catch (err) {
     next(err);
   }

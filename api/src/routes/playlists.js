@@ -8,12 +8,12 @@ router.use(auth);
 
 router.get('/', playlistController.getMyPlaylists);
 router.post('/', playlistController.createPlaylist);
-router.get('/:id', playlistController.getPlaylist);
-router.put('/:id', playlistController.updatePlaylist);
-router.delete('/:id', playlistController.deletePlaylist);
+router.get('/:gid', playlistController.getPlaylist);
+router.put('/:gid', playlistController.updatePlaylist);
+router.delete('/:gid', playlistController.deletePlaylist);
 
-router.post('/:id/tracks', playlistController.addTrack);
-router.delete('/:id/tracks/:track_mbid', playlistController.removeTrack);
-router.put('/:id/tracks', playlistController.reorderTracks);
+router.post('/:gid/tracks', playlistController.addTrack);
+router.delete('/:gid/tracks/:track_mbid', playlistController.removeTrack);
+router.put('/:gid/tracks', playlistController.reorderTracks);
 
 export default router;

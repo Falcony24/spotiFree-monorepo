@@ -30,7 +30,7 @@ app.use('/api/search', searchRoutes);
 app.use('/api/tracks', trackRoutes);
 app.use('/api/albums', albumRoutes);
 app.use('/api/artists', artistRoutes);
-app.use('/api//me', userRoutes);
+app.use('/api/me', userRoutes);
 
 app.get('/health', (req, res) => res.send('OK'));
 

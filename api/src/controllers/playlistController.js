@@ -1,6 +1,6 @@
 import { Op } from 'sequelize';
 import { Playlist, PlaylistTrack } from '../models/index.js';
-import { Recording, ArtistCredit } from '../models/musicbrainz/index.js'; 
+import { Recording, ArtistCredit } from '../models/musicbrainz/index.js';
 import sequelize from '../config/database.js';
 
 export const getMyPlaylists = async (req, res, next) => {
@@ -16,7 +16,14 @@ export const getMyPlaylists = async (req, res, next) => {
     });
 
     res.json({
-      data: playlists,
+      data: playlists.map(p => ({
+        id: p.gid,
+        name: p.name,
+        description: p.description,
+        is_public: p.is_public,
+        created_at: p.created_at,
+        updated_at: p.updated_at
+      })),
       total: count,
       limit,
       offset,
@@ -35,7 +42,14 @@ export const createPlaylist = async (req, res, next) => {
       description,
       is_public: is_public ?? false,
     });
-    res.status(201).json(playlist);
+    res.status(201).json({
+      id: playlist.gid,
+      name: playlist.name,
+      description: playlist.description,
+      is_public: playlist.is_public,
+      created_at: playlist.created_at,
+      updated_at: playlist.updated_at
+    });
   } catch (err) {
     next(err);
   }
@@ -43,7 +57,7 @@ export const createPlaylist = async (req, res, next) => {
 
 export const getPlaylist = async (req, res, next) => {
   try {
-    const playlist = await Playlist.findByPk(req.params.id);
+    const playlist = await Playlist.findOne({ where: { gid: req.params.gid } });
     if (!playlist) {
       return res.status(404).json({ error: 'Playlist not found' });
     }
@@ -57,7 +71,18 @@ export const getPlaylist = async (req, res, next) => {
     });
 
     if (playlistTracks.length === 0) {
-      return res.json({ playlist, tracks: [] });
+      return res.json({
+        playlist: {
+          id: playlist.gid,
+          name: playlist.name,
+          description: playlist.description,
+          is_public: playlist.is_public,
+          user_id: playlist.user_id,
+          created_at: playlist.created_at,
+          updated_at: playlist.updated_at
+        },
+        tracks: []
+      });
     }
 
     const mbids = playlistTracks.map(pt => pt.track_mbid);
@@ -77,25 +102,33 @@ export const getPlaylist = async (req, res, next) => {
       recordingMap[rec.gid] = rec;
     });
 
-    const tracks = playlistTracks.map(pt => {
-      const rec = recordingMap[pt.track_mbid];
-      return {
-        id: pt.id,
-        track_mbid: pt.track_mbid,
-        position: pt.position,
-        added_at: pt.created_at,
-        track: rec
-          ? {
-              id: rec.gid,
-              title: rec.name,
-              artist: rec.artistCredit?.name || 'Unknown',
-              duration: rec.length,
-            }
-          : null, 
-      };
-    });
+    const tracks = playlistTracks.map(pt => ({
+      id: pt.gid,
+      track_mbid: pt.track_mbid,
+      position: pt.position,
+      added_at: pt.created_at,
+      track: recordingMap[pt.track_mbid]
+        ? {
+            id: recordingMap[pt.track_mbid].gid,
+            title: recordingMap[pt.track_mbid].name,
+            artist: recordingMap[pt.track_mbid].artistCredit?.name || 'Unknown',
+            duration: recordingMap[pt.track_mbid].length,
+          }
+        : null,
+    }));
 
-    res.json({ playlist, tracks });
+    res.json({
+      playlist: {
+        id: playlist.gid,
+        name: playlist.name,
+        description: playlist.description,
+        is_public: playlist.is_public,
+        user_id: playlist.user_id,
+        created_at: playlist.created_at,
+        updated_at: playlist.updated_at
+      },
+      tracks
+    });
   } catch (err) {
     next(err);
   }
@@ -103,7 +136,7 @@ export const getPlaylist = async (req, res, next) => {
 
 export const updatePlaylist = async (req, res, next) => {
   try {
-    const playlist = await Playlist.findByPk(req.params.id);
+    const playlist = await Playlist.findOne({ where: { gid: req.params.gid } });
     if (!playlist) {
       return res.status(404).json({ error: 'Playlist not found' });
     }
@@ -112,7 +145,13 @@ export const updatePlaylist = async (req, res, next) => {
     }
     const { name, description, is_public } = req.body;
     await playlist.update({ name, description, is_public });
-    res.json(playlist);
+    res.json({
+      id: playlist.gid,
+      name: playlist.name,
+      description: playlist.description,
+      is_public: playlist.is_public,
+      updated_at: playlist.updated_at
+    });
   } catch (err) {
     next(err);
   }
@@ -120,7 +159,7 @@ export const updatePlaylist = async (req, res, next) => {
 
 export const deletePlaylist = async (req, res, next) => {
   try {
-    const playlist = await Playlist.findByPk(req.params.id);
+    const playlist = await Playlist.findOne({ where: { gid: req.params.gid } });
     if (!playlist) {
       return res.status(404).json({ error: 'Playlist not found' });
     }
@@ -137,7 +176,7 @@ export const deletePlaylist = async (req, res, next) => {
 export const addTrack = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-    const playlist = await Playlist.findByPk(req.params.id, { transaction: t });
+    const playlist = await Playlist.findOne({ where: { gid: req.params.gid }, transaction: t });
     if (!playlist || playlist.user_id !== req.user.id) {
       await t.rollback();
       return res.status(403).json({ error: 'Forbidden' });
@@ -182,7 +221,13 @@ export const addTrack = async (req, res, next) => {
     );
 
     await t.commit();
-    res.status(201).json(track);
+    res.status(201).json({
+      id: track.gid,
+      playlist_id: playlist.gid,
+      track_mbid,
+      position: pos,
+      added_at: track.created_at
+    });
   } catch (err) {
     await t.rollback();
     next(err);
@@ -192,7 +237,7 @@ export const addTrack = async (req, res, next) => {
 export const removeTrack = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-    const playlist = await Playlist.findByPk(req.params.id, { transaction: t });
+    const playlist = await Playlist.findOne({ where: { gid: req.params.gid }, transaction: t });
     if (!playlist || playlist.user_id !== req.user.id) {
       await t.rollback();
       return res.status(403).json({ error: 'Forbidden' });
@@ -232,7 +277,7 @@ export const removeTrack = async (req, res, next) => {
 export const reorderTracks = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-    const playlist = await Playlist.findByPk(req.params.id, { transaction: t });
+    const playlist = await Playlist.findOne({ where: { gid: req.params.gid }, transaction: t });
     if (!playlist || playlist.user_id !== req.user.id) {
       await t.rollback();
       return res.status(403).json({ error: 'Forbidden' });
@@ -265,10 +310,17 @@ export const reorderTracks = async (req, res, next) => {
       track_mbid: item.track_mbid,
       position: item.position !== undefined ? item.position : index + 1,
     }));
-    await PlaylistTrack.bulkCreate(tracksToInsert, { transaction: t });
+    const createdTracks = await PlaylistTrack.bulkCreate(tracksToInsert, { transaction: t, returning: true });
 
     await t.commit();
-    res.status(200).json({ message: 'Playlist reordered successfully' });
+    res.status(200).json({
+      message: 'Playlist reordered successfully',
+      tracks: createdTracks.map(t => ({
+        id: t.gid,
+        track_mbid: t.track_mbid,
+        position: t.position
+      }))
+    });
   } catch (err) {
     await t.rollback();
     next(err);
