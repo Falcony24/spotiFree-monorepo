@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -10,7 +11,14 @@ class AuthService {
     defaultValue: 'http://localhost:3000/api',
   );
 
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  final http.Client _httpClient;
+  final FlutterSecureStorage _secureStorage;
+
+  AuthService({
+    http.Client? httpClient,
+    FlutterSecureStorage? secureStorage,
+  }) : _httpClient = httpClient ?? http.Client(),
+       _secureStorage = secureStorage ?? const FlutterSecureStorage();
 
   Future<void> saveTokens(String accessToken, String refreshToken) async {
     await _secureStorage.write(key: _accessTokenKey, value: accessToken);
@@ -31,12 +39,12 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>> login(String username, String password) async {
-    final response = await http.post(
+    final response = await _httpClient.post(
       Uri.parse('$baseUrl/auth/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'username': username, 'password': password}),
     );
-
+    
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       await saveTokens(data['accessToken'], data['refreshToken']);
@@ -47,7 +55,7 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>> register(String username, String password) async {
-    final response = await http.post(
+    final response = await _httpClient.post(
       Uri.parse('$baseUrl/auth/register'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'username': username, 'password': password}),
@@ -67,7 +75,7 @@ class AuthService {
     if (refreshToken == null) return false;
 
     try {
-      final response = await http.post(
+      final response = await _httpClient.post(
         Uri.parse('$baseUrl/auth/refresh'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'refreshToken': refreshToken}),
@@ -91,7 +99,7 @@ class AuthService {
     final refreshToken = await getRefreshToken();
     if (refreshToken != null) {
       try {
-        await http.post(
+        await _httpClient.post(
           Uri.parse('$baseUrl/auth/logout'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({'refreshToken': refreshToken}),

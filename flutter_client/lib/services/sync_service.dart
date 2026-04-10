@@ -5,8 +5,14 @@ import 'package:frontend/services/api_service.dart';
 import 'package:frontend/models/track.dart';
 
 class SyncService {
-  final OfflineStorage _storage = OfflineStorage();
-  final ApiService _api = ApiService();
+  final OfflineStorage _storage;
+  final ApiService _api;
+
+  SyncService({
+    OfflineStorage? storage,
+    ApiService? api,
+  }) : _storage = storage ?? OfflineStorage(),
+       _api = api ?? ApiService();
 
   Future<void> syncAll() async {
     await _pushLocalChanges();

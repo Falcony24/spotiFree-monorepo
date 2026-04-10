@@ -6,13 +6,13 @@ import 'package:frontend/services/api_service.dart';
 import 'package:frontend/services/offline_storage.dart';
 
 class LikedTracksProvider extends ChangeNotifier {
-  final OfflineStorage _storage = OfflineStorage();
-  final ApiService _api = ApiService();
+  final OfflineStorage _storage;
+  final ApiService _api;
   ModeProvider? _modeProvider;
 
   List<Map<String, dynamic>> _likedItems = [];
-  bool _isLoading = false;      
-  bool _isRefreshing = false;   
+  bool _isLoading = false;
+  bool _isRefreshing = false;
   String? _error;
 
   List<Map<String, dynamic>> get likedItems => _likedItems;
@@ -20,6 +20,12 @@ class LikedTracksProvider extends ChangeNotifier {
   bool get isRefreshing => _isRefreshing;
   String? get error => _error;
 
+  LikedTracksProvider({
+    OfflineStorage? storage,
+    ApiService? api,
+  }) : _storage = storage ?? OfflineStorage(),
+       _api = api ?? ApiService();
+       
   void setModeProvider(ModeProvider modeProvider) {
     _modeProvider = modeProvider;
   }
@@ -58,9 +64,7 @@ class LikedTracksProvider extends ChangeNotifier {
         await _storage.addLikedTrack(item['id'], item['track']);
       }
     } catch (e) {
-      if (_likedItems.isEmpty) {
-        _error = e.toString();
-      }
+        _error = e.toString();      
     } finally {
       _isLoading = false;
       _isRefreshing = false;
