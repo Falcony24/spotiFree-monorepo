@@ -170,16 +170,28 @@ export const deleteFavorite = async (req, res, next) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
+    const { type } = req.query;
 
-    let favorite = await FavoriteArtist.findOne({ where: { gid: id, user_id: userId } });
-    if (!favorite) favorite = await FavoriteAlbum.findOne({ where: { gid: id, user_id: userId } });
-    if (!favorite) favorite = await FavoriteTrack.findOne({ where: { gid: id, user_id: userId } });
+    let deletedCount = 0;
 
-    if (!favorite) {
+    switch (type) {
+      case 'track':
+        deletedCount = await FavoriteTrack.destroy({ where: { gid: id, user_id: userId } });
+        break;
+      case 'album':
+        deletedCount = await FavoriteAlbum.destroy({ where: { gid: id, user_id: userId } });
+        break;
+      case 'artist':
+        deletedCount = await FavoriteArtist.destroy({ where: { gid: id, user_id: userId } });
+        break;
+      default:
+        return res.status(400).json({ error: 'Invalid type' });
+    }
+
+    if (deletedCount === 0) {
       return res.status(404).json({ error: 'Favorite not found' });
     }
 
-    await favorite.destroy();
     res.status(204).send();
   } catch (err) {
     next(err);

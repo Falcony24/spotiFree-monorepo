@@ -180,7 +180,7 @@ describe('Favorite Controller', () => {
       const favoriteGid = created.gid;
 
       const res = await request(app)
-        .delete(`/api/favorites/${favoriteGid}`)
+        .delete(`/api/favorites/${favoriteGid}?type=artist`)
         .set('Authorization', `Bearer ${authToken}`);
       expect(res.statusCode).toBe(204);
 
@@ -191,7 +191,7 @@ describe('Favorite Controller', () => {
     it('should return 404 if favorite not found', async () => {
       const validUuid = '00000000-0000-0000-0000-000000000000'; 
       const res = await request(app)
-        .delete(`/api/favorites/${validUuid}`)
+        .delete(`/api/favorites/${validUuid}?type=artist`)
         .set('Authorization', `Bearer ${authToken}`);
       expect(res.statusCode).toBe(404);
     });
