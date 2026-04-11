@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/track.dart';
+import 'package:frontend/providers/liked_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/models/playlist.dart';
 import 'package:frontend/providers/playlist_tracks_provider.dart';
-import 'package:frontend/providers/liked_tracks_provider.dart';
 import 'package:frontend/providers/player_provider.dart';
 import 'package:frontend/widgets/track_tile.dart';
 
@@ -32,21 +32,17 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
       await Provider.of<PlaylistTracksProvider>(context, listen: false)
           .loadTracks(widget.playlist.id);
     } else {
-      await Provider.of<LikedTracksProvider>(context, listen: false)
-          .fetchLikedTracks();
+      await Provider.of<LikedProvider<Track>>(context, listen: false)
+          .fetchLikedObjects();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     if (widget.playlist.id == 'liked_tracks') {
-      return Consumer<LikedTracksProvider>(
+      return Consumer<LikedProvider<Track>>(
         builder: (context, likedProvider, child) {
-          final likedTracks = likedProvider.likedItems
-              .map((item) => item['track'] as Track?)
-              .where((track) => track != null)
-              .cast<Track>()
-              .toList();
+          final likedTracks = likedProvider.objects; 
           return Scaffold(
             appBar: AppBar(
               title: Text(widget.playlist.name),
@@ -62,12 +58,12 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                   ),
                 IconButton(
                   icon: const Icon(Icons.refresh),
-                  onPressed: () => likedProvider.fetchLikedTracks(),
+                  onPressed: () => likedProvider.fetchLikedObjects(),
                 ),
               ],
             ),
             body: RefreshIndicator(
-              onRefresh: () => likedProvider.fetchLikedTracks(),
+              onRefresh: () => likedProvider.fetchLikedObjects(),
               child: likedProvider.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : likedTracks.isEmpty

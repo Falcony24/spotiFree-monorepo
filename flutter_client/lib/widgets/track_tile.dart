@@ -1,16 +1,19 @@
 import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/providers/downloaded_tracks_provider.dart';
-import 'package:frontend/services/download_service.dart';
-import 'package:frontend/widgets/DownloadButton.dart';
+import 'package:frontend/data/repositories/playlist_repository.dart';
+import 'package:frontend/providers/liked_provider.dart';
+import 'package:frontend/providers/mode_provider.dart';
+import 'package:frontend/widgets/download_button.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/models/track.dart';
 import 'package:frontend/providers/player_provider.dart';
-import 'package:frontend/providers/liked_tracks_provider.dart';
 import 'package:frontend/providers/playlist_provider.dart';
-import 'package:frontend/services/api_service.dart';
+import 'package:frontend/providers/downloaded_tracks_provider.dart';
+import 'package:frontend/domain/usecases/manage_playlist_use_case.dart';
+import 'package:frontend/domain/usecases/search_use_case.dart';
+import 'package:frontend/data/repositories/track_repository.dart';
+import 'package:frontend/data/services/search_service.dart';
 import 'package:frontend/screens/artist_screen.dart';
 
 class TrackTile extends StatelessWidget {
@@ -19,11 +22,15 @@ class TrackTile extends StatelessWidget {
 
   const TrackTile({super.key, required this.track, this.onPlay});
 
-  void _showAddToPlaylistDialog(BuildContext context) {
+  Future<void> _showAddToPlaylistDialog(BuildContext context) async {
     final playlistProvider = Provider.of<PlaylistProvider>(context, listen: false);
     final playlists = playlistProvider.playlists;
+    final managePlaylistUseCase = ManagePlaylistUseCase(
+      repository: PlaylistRepository(),
+      modeProvider: Provider.of<ModeProvider>(context, listen: false),
+    );
 
-    showDialog(
+    await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Dodaj do playlisty'),
@@ -39,7 +46,7 @@ class TrackTile extends StatelessWidget {
                 onTap: () async {
                   Navigator.pop(ctx);
                   try {
-                    await ApiService().addTrackToPlaylist(playlist.id, track.id);
+                    await managePlaylistUseCase.addTrackToPlaylist(playlist.id, track.id);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Dodano do ${playlist.name}')),
@@ -70,9 +77,14 @@ class TrackTile extends StatelessWidget {
     );
   }
 
-  void _showCreatePlaylistDialog(BuildContext context) {
+  Future<void> _showCreatePlaylistDialog(BuildContext context) async {
     final TextEditingController nameController = TextEditingController();
-    showDialog(
+    final managePlaylistUseCase = ManagePlaylistUseCase(
+      repository: PlaylistRepository(),
+      modeProvider: Provider.of<ModeProvider>(context, listen: false),
+    );
+
+    await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Nowa playlista'),
@@ -90,8 +102,8 @@ class TrackTile extends StatelessWidget {
               final name = nameController.text.trim();
               if (name.isNotEmpty) {
                 try {
-                  final playlist = await ApiService().createPlaylist(name);
-                  await ApiService().addTrackToPlaylist(playlist.id, track.id);
+                  final playlist = await managePlaylistUseCase.createPlaylist(name);
+                  await managePlaylistUseCase.addTrackToPlaylist(playlist.id, track.id);
                   await Provider.of<PlaylistProvider>(context, listen: false)
                       .fetchPlaylists(refresh: true);
                   if (context.mounted) {
@@ -124,8 +136,9 @@ class TrackTile extends StatelessWidget {
 
   Future<void> _navigateToArtist(BuildContext context, String artistName) async {
     if (artistName.isEmpty) return;
+    final searchUseCase = SearchUseCase(searchService: SearchService());
     try {
-      final results = await ApiService().search(artistName, type: 'artist');
+      final results = await searchUseCase.execute(artistName, type: 'artist');
       final artistsData = results['artists'] as Map<String, dynamic>?;
       final artists = artistsData?['data'] as List? ?? [];
       if (artists.isNotEmpty) {
@@ -165,8 +178,9 @@ class TrackTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final likedProvider = Provider.of<LikedTracksProvider>(context);
+    final likedProvider = Provider.of<LikedProvider<Track>>(context);
     final isLiked = likedProvider.isLiked(track.id);
+    final trackRepository = TrackRepository();
 
     return ListTile(
       leading: const Icon(Icons.music_note),
@@ -215,9 +229,9 @@ class TrackTile extends StatelessWidget {
                   isDownloaded: isDownloaded,
                   onDownload: () async {
                     try {
-                      final service = DownloadService();
-                      final filePath = await service.downloadTrack(track);
-                      await downloadedProvider.addDownloadedTrack(track, filePath);
+                      await trackRepository.downloadTrack(track);
+                      final path = await trackRepository.getDownloadedFilePath(track.id) ?? '';
+                      await downloadedProvider.addDownloadedTrack(track, path);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Pobrano: ${track.title}')),
@@ -237,6 +251,7 @@ class TrackTile extends StatelessWidget {
                       final file = File(filePath);
                       if (await file.exists()) await file.delete();
                     }
+                    await trackRepository.removeDownloadedTrack(track.id);
                     await downloadedProvider.removeDownloadedTrack(track.id);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(

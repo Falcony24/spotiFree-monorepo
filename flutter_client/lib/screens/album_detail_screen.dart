@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/data/services/albums_service.dart';
+import 'package:frontend/providers/liked_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/models/album.dart';
-import 'package:frontend/services/api_service.dart';
 import 'package:frontend/widgets/track_tile.dart';
-import 'package:frontend/providers/liked_albums_provider.dart';
 import 'package:frontend/providers/album_detail_provider.dart';
 import 'package:frontend/providers/player_provider.dart';
 import 'package:frontend/providers/mode_provider.dart';
+import 'package:frontend/domain/usecases/get_album_tracks_use_case.dart';
+import 'package:frontend/data/repositories/album_repository.dart';
 
 class AlbumDetailScreen extends StatelessWidget {
   final Album? album;
@@ -42,6 +44,8 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
   bool _isLoadingMetadata = false;
   String? _metadataError;
 
+  late AlbumDetailProvider _albumDetailProvider;
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +55,18 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
     } else {
       _fetchMetadata();
     }
+
+    // Tworzymy providera dla tego albumu
+    final modeProvider = Provider.of<ModeProvider>(context, listen: false);
+    final getAlbumTracksUseCase = GetAlbumTracksUseCase(
+      repository: AlbumRepository(),
+      modeProvider: modeProvider,
+    );
+    _albumDetailProvider = AlbumDetailProvider(
+      albumId: widget.albumId,
+      getAlbumTracksUseCase: getAlbumTracksUseCase,
+      modeProvider: modeProvider,
+    );
   }
 
   Future<void> _fetchMetadata() async {
@@ -59,7 +75,7 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
       _metadataError = null;
     });
     try {
-      final data = await ApiService().getAlbum(widget.albumId);
+      final data = await AlbumsService().getAlbum(widget.albumId);
       setState(() {
         _albumTitle = data['title'];
         _albumArtist = data['artist'];
@@ -82,19 +98,14 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
       title: _albumTitle!,
       artist: _albumArtist,
     );
-    final provider = Provider.of<LikedAlbumsProvider>(context, listen: false);
+    final provider = Provider.of<LikedProvider<Album>>(context, listen: false);
     await provider.toggleLike(album);
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProxyProvider<ModeProvider, AlbumDetailProvider>(
-      create: (_) => AlbumDetailProvider(widget.albumId),
-      update: (_, modeProvider, previous) {
-        final provider = previous ?? AlbumDetailProvider(widget.albumId);
-        provider.setModeProvider(modeProvider);
-        return provider;
-      },
+    return ChangeNotifierProvider.value(
+      value: _albumDetailProvider,
       child: Consumer<AlbumDetailProvider>(
         builder: (context, provider, child) {
           final modeProvider = Provider.of<ModeProvider>(context);
@@ -116,7 +127,7 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
                       player.playTracks(provider.tracks, startIndex: 0);
                     },
                   ),
-                Consumer<LikedAlbumsProvider>(
+                Consumer<LikedProvider<Album>>(
                   builder: (context, likedProvider, child) {
                     final isLiked = likedProvider.isLiked(widget.albumId);
                     return IconButton(

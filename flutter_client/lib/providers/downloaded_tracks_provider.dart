@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/track.dart';
-import 'package:frontend/services/offline_storage.dart';
+import 'package:frontend/data/services/offline_storage.dart';
 
 class DownloadedTracksProvider extends ChangeNotifier {
   final OfflineStorage _storage = OfflineStorage();

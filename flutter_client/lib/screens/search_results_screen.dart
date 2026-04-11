@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/track.dart';
-import 'package:frontend/services/api_service.dart';
+import 'package:frontend/domain/usecases/search_use_case.dart';
+import 'package:frontend/data/services/search_service.dart';
 import 'package:frontend/screens/artist_screen.dart';
 import 'package:frontend/screens/album_detail_screen.dart';
 import 'package:frontend/utils/responsive.dart';
 import 'package:frontend/widgets/album_grid_item.dart';
 import 'package:frontend/widgets/track_tile.dart';
+import 'package:frontend/models/track.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String query;
@@ -22,10 +23,13 @@ class _SearchResultsScreenState extends State<SearchResultsScreen>
   bool _isLoading = true;
   String? _error;
 
+  late SearchUseCase _searchUseCase;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _searchUseCase = SearchUseCase(searchService: SearchService());
     _performSearch();
   }
 
@@ -35,7 +39,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen>
       _error = null;
     });
     try {
-      final results = await ApiService().search(widget.query);
+      final results = await _searchUseCase.execute(widget.query);
       setState(() {
         _results = results;
       });
@@ -95,76 +99,76 @@ class _SearchResultsScreenState extends State<SearchResultsScreen>
     );
   }
 
-Widget _buildArtistList(List<dynamic> artists) {
-  if (artists.isEmpty) return const Center(child: Text('Brak artystów'));
-  return ListView.builder(
-    itemCount: artists.length,
-    itemBuilder: (ctx, index) {
-      final item = artists[index];
-      final id = item is Map ? item['id'] : item.id;
-      final name = item is Map ? item['name'] : item.name;
-      return ListTile(
-        leading: const Icon(Icons.person),
-        title: Text(name ?? 'Nieznany artysta'),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ArtistScreen(artistId: id),
-            ),
-          );
-        },
-      );
-    },
-  );
-}
-
-Widget _buildAlbumList(List<dynamic> albums) {
-  if (albums.isEmpty) return const Center(child: Text('Brak albumów'));
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      final crossAxisCount = getCrossAxisCount(constraints.maxWidth);
-      return GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: crossAxisCount,
-          childAspectRatio: 0.8,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-        ),
-        itemCount: albums.length,
-        itemBuilder: (ctx, index) {
-          final album = albums[index];
-          return AlbumGridItem(
-            album: album,
-            onTap: () => Navigator.push(
+  Widget _buildArtistList(List<dynamic> artists) {
+    if (artists.isEmpty) return const Center(child: Text('Brak artystów'));
+    return ListView.builder(
+      itemCount: artists.length,
+      itemBuilder: (ctx, index) {
+        final item = artists[index];
+        final id = item is Map ? item['id'] : item.id;
+        final name = item is Map ? item['name'] : item.name;
+        return ListTile(
+          leading: const Icon(Icons.person),
+          title: Text(name ?? 'Nieznany artysta'),
+          onTap: () {
+            Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => AlbumDetailScreen(album: album),
+                builder: (context) => ArtistScreen(artistId: id),
               ),
-            ),
-          );
-        },
-      );
-    },
-  );
-}
-
-Widget _buildTrackList(List<dynamic> tracks) {
-  if (tracks.isEmpty) {
-    return const Center(child: Text('Brak utworów'));
+            );
+          },
+        );
+      },
+    );
   }
-  return ListView.builder(
-    itemCount: tracks.length,
-    itemBuilder: (ctx, index) {
-      final item = tracks[index];
-      final track = item is Map
-          ? Track.fromJson(Map<String, dynamic>.from(item))
-          : item as Track;
-      return TrackTile(track: track);
-    },
-  );
-}
+
+  Widget _buildAlbumList(List<dynamic> albums) {
+    if (albums.isEmpty) return const Center(child: Text('Brak albumów'));
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = getCrossAxisCount(constraints.maxWidth);
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            childAspectRatio: 0.8,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+          ),
+          itemCount: albums.length,
+          itemBuilder: (ctx, index) {
+            final album = albums[index];
+            return AlbumGridItem(
+              album: album,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AlbumDetailScreen(album: album),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildTrackList(List<dynamic> tracks) {
+    if (tracks.isEmpty) {
+      return const Center(child: Text('Brak utworów'));
+    }
+    return ListView.builder(
+      itemCount: tracks.length,
+      itemBuilder: (ctx, index) {
+        final item = tracks[index];
+        final track = item is Map
+            ? Track.fromJson(Map<String, dynamic>.from(item))
+            : item as Track;
+        return TrackTile(track: track);
+      },
+    );
+  }
 
   @override
   void dispose() {

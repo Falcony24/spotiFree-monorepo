@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/providers/mode_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/providers/playlist_provider.dart';
-import 'package:frontend/providers/liked_albums_provider.dart';
-import 'package:frontend/providers/liked_artists_provider.dart';
+import 'package:frontend/providers/liked_provider.dart'; // nowy
 import 'package:frontend/providers/auth_provider.dart';
 import 'package:frontend/models/playlist.dart';
 import 'package:frontend/models/album.dart';
@@ -35,8 +34,8 @@ class _LeftPanelState extends State<LeftPanel> {
   @override
   Widget build(BuildContext context) {
     final playlistProvider = Provider.of<PlaylistProvider>(context);
-    final albumsProvider = Provider.of<LikedAlbumsProvider>(context);
-    final artistsProvider = Provider.of<LikedArtistsProvider>(context);
+    final albumsProvider = Provider.of<LikedProvider<Album>>(context);
+    final artistsProvider = Provider.of<LikedProvider<Artist>>(context);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     return Container(
@@ -100,27 +99,6 @@ class _LeftPanelState extends State<LeftPanel> {
     );
   }
 
-  Widget _buildOfflinePlaceholder(String message) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.wifi_off, size: 48, color: Colors.grey),
-          const SizedBox(height: 16),
-          Text(
-            'Tryb offline – $message',
-            style: const TextStyle(color: Colors.grey),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Wyłącz tryb offline, aby przeglądać katalog',
-            style: TextStyle(color: Colors.grey, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTabButton(String label, int index) {
     return Expanded(
       child: GestureDetector(
@@ -148,7 +126,7 @@ class _LeftPanelState extends State<LeftPanel> {
     );
   }
 
-  Widget _buildContent(PlaylistProvider playlistProvider, LikedAlbumsProvider albumsProvider, LikedArtistsProvider artistsProvider) {
+  Widget _buildContent(PlaylistProvider playlistProvider, LikedProvider<Album> albumsProvider, LikedProvider<Artist> artistsProvider) {
     if (_selectedTab == 0) {
       if (playlistProvider.isLoading) return const Center(child: CircularProgressIndicator());
       if (widget.isCollapsed) {
@@ -159,7 +137,7 @@ class _LeftPanelState extends State<LeftPanel> {
             IconButton(
               icon: const Icon(Icons.favorite, color: Colors.green),
               onPressed: () => widget.onPlaylistSelected(Playlist(
-                id: 'liked_tracks',   
+                id: 'liked_tracks',
                 name: 'Polubione utwory',
                 description: 'Twoje ulubione utwory',
                 isPublic: false,
@@ -182,7 +160,7 @@ class _LeftPanelState extends State<LeftPanel> {
               leading: const Icon(Icons.favorite, color: Colors.green),
               title: const Text('Polubione utwory'),
               onTap: () => widget.onPlaylistSelected(Playlist(
-                id: 'liked_tracks',   
+                id: 'liked_tracks',
                 name: 'Polubione utwory',
                 description: 'Twoje ulubione utwory',
                 isPublic: false,
@@ -239,14 +217,14 @@ class _LeftPanelState extends State<LeftPanel> {
       }
     } else if (_selectedTab == 1) {
       if (albumsProvider.isLoading) return const Center(child: CircularProgressIndicator());
-      if (albumsProvider.albums.isEmpty) return const Center(child: Text('Brak polubionych albumów'));
+      if (albumsProvider.objects.isEmpty) return const Center(child: Text('Brak polubionych albumów'));
       if (widget.isCollapsed) {
         return ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: albumsProvider.albums.length,
+          itemCount: albumsProvider.objects.length,
           itemBuilder: (ctx, i) {
-            final album = albumsProvider.albums[i];
+            final album = albumsProvider.objects[i];
             return IconButton(
               icon: const Icon(Icons.album),
               onPressed: () => widget.onAlbumSelected(album),
@@ -257,9 +235,9 @@ class _LeftPanelState extends State<LeftPanel> {
         return ListView.builder(
           shrinkWrap: true,
           physics: const AlwaysScrollableScrollPhysics(),
-          itemCount: albumsProvider.albums.length,
+          itemCount: albumsProvider.objects.length,
           itemBuilder: (ctx, i) {
-            final album = albumsProvider.albums[i];
+            final album = albumsProvider.objects[i];
             return ListTile(
               leading: const Icon(Icons.album),
               title: Text(album.title),
@@ -271,14 +249,14 @@ class _LeftPanelState extends State<LeftPanel> {
       }
     } else {
       if (artistsProvider.isLoading) return const Center(child: CircularProgressIndicator());
-      if (artistsProvider.artists.isEmpty) return const Center(child: Text('Brak polubionych artystów'));
+      if (artistsProvider.objects.isEmpty) return const Center(child: Text('Brak polubionych artystów'));
       if (widget.isCollapsed) {
         return ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: artistsProvider.artists.length,
+          itemCount: artistsProvider.objects.length,
           itemBuilder: (ctx, i) {
-            final artist = artistsProvider.artists[i];
+            final artist = artistsProvider.objects[i];
             return IconButton(
               icon: const Icon(Icons.person),
               onPressed: () => widget.onArtistSelected(artist),
@@ -289,9 +267,9 @@ class _LeftPanelState extends State<LeftPanel> {
         return ListView.builder(
           shrinkWrap: true,
           physics: const AlwaysScrollableScrollPhysics(),
-          itemCount: artistsProvider.artists.length,
+          itemCount: artistsProvider.objects.length,
           itemBuilder: (ctx, i) {
-            final artist = artistsProvider.artists[i];
+            final artist = artistsProvider.objects[i];
             return ListTile(
               leading: const Icon(Icons.person),
               title: Text(artist.name),

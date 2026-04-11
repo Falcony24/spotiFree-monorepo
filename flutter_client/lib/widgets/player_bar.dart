@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/providers/player_provider.dart';
-import 'package:frontend/providers/liked_tracks_provider.dart';
+import 'package:frontend/providers/liked_provider.dart';
+import 'package:frontend/models/track.dart';
 
 class PlayerBar extends StatelessWidget {
   const PlayerBar({super.key});
@@ -9,7 +10,6 @@ class PlayerBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final player = Provider.of<PlayerProvider>(context);
-    final likedProvider = Provider.of<LikedTracksProvider>(context, listen: false);
 
     if (player.currentTrack == null) {
       return Container(
@@ -22,7 +22,6 @@ class PlayerBar extends StatelessWidget {
     }
 
     final track = player.currentTrack!;
-    final isLiked = likedProvider.isLiked(track.id);
 
     return Container(
       height: 100,
@@ -61,12 +60,17 @@ class PlayerBar extends StatelessWidget {
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: Icon(
-                    isLiked ? Icons.favorite : Icons.favorite_border,
-                    color: isLiked ? Colors.green : Colors.white,
-                  ),
-                  onPressed: () => player.toggleLikeCurrentTrack(context),
+                Consumer<LikedProvider<Track>>(
+                  builder: (context, likedProvider, child) {
+                    final isLiked = likedProvider.isLiked(track.id);
+                    return IconButton(
+                      icon: Icon(
+                        isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: isLiked ? Colors.green : Colors.white,
+                      ),
+                      onPressed: () => _toggleLike(context, track),
+                    );
+                  },
                 ),
               ],
             ),
@@ -153,6 +157,11 @@ class PlayerBar extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _toggleLike(BuildContext context, Track track) async {
+    final likedProvider = Provider.of<LikedProvider<Track>>(context, listen: false);
+    await likedProvider.toggleLike(track);
   }
 
   String _formatDuration(Duration duration) {

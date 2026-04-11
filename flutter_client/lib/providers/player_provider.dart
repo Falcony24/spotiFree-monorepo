@@ -4,16 +4,17 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/track.dart';
 import 'package:frontend/providers/downloaded_tracks_provider.dart';
-import 'package:frontend/providers/liked_tracks_provider.dart';
+import 'package:frontend/providers/liked_provider.dart';
 import 'package:frontend/providers/mode_provider.dart';
-import 'package:frontend/services/api_service.dart';
-import 'package:frontend/services/player_service.dart';
+import 'package:frontend/data/services/player_service.dart';
 import 'package:frontend/main.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/data/services/tracks_service.dart';
 
 class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
   final PlayerService _playerService = PlayerService();
+  final tracksService = TracksService();
   Track? _currentTrack;
   bool _isPlaying = false;
   Duration _position = Duration.zero;
@@ -133,7 +134,7 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
         if (localPath != null) {
           source = Uri.file(localPath).toString();
         } else {
-          source = await ApiService().getPresignedStreamUrl(track.id);
+          source = await TracksService().getPresignedStreamUrl(track.id);
         }
       }
       await _playerService.setSourceAndSeek(source, Duration(milliseconds: seekMs));
@@ -214,7 +215,7 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
         final fileUri = Uri.file(localPath).toString();
         await _playerService.play(fileUri);
       } else {
-        final streamUrl = await ApiService().getPresignedStreamUrl(track.id);
+        final streamUrl = await tracksService.getPresignedStreamUrl(track.id);
         await _playerService.play(streamUrl);
       }
       _isPlaying = true;
@@ -249,7 +250,7 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
         return;
       }
       try {
-        final status = await ApiService().getTaskStatus(taskId);
+        final status = await TracksService().getTaskStatus(taskId);
         if (status['status'] == 'completed') {
           _isPolling = false;
           if (!_pollingCancelled && _currentTrack?.id == track.id) {
@@ -339,7 +340,7 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> toggleLikeCurrentTrack(BuildContext context) async {
     if (_currentTrack != null) {
-      final likedProvider = Provider.of<LikedTracksProvider>(context, listen: false);
+      final likedProvider = Provider.of<LikedProvider<Track>>(context, listen: false);
       await likedProvider.toggleLike(_currentTrack!);
     }
   }
