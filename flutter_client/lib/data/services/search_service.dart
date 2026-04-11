@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:frontend/data/services/AuthenticatedHttpClient.dart';
+import 'package:frontend/data/services/authenticated_http_client.dart';
 import 'package:frontend/models/artist.dart';
 import 'package:frontend/models/album.dart';
 import 'package:frontend/models/track.dart';
@@ -14,7 +14,7 @@ class SearchService {
   Future<Map<String, dynamic>> search(String query, {String? type, int limit = 20, int offset = 0}) async {
     final uri = Uri.parse('$baseUrl/search').replace(queryParameters: {
       'q': query,
-      if (type != null) 'type': type,
+      'type': ?type,
       'limit': limit.toString(),
       'offset': offset.toString(),
     });

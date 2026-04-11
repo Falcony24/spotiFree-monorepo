@@ -283,7 +283,7 @@ class OfflineStorage {
       final maps = await db.query('liked_tracks');
       return maps.map((m) => {
         'id': m['favorite_id'] as String,
-        'track': Track(
+        'entity': Track(
           id: m['track_id'] as String,
           title: m['title'] as String,
           artist: m['artist'] as String,

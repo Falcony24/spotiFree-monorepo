@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:frontend/data/services/AuthenticatedHttpClient.dart';
+import 'package:frontend/data/services/authenticated_http_client.dart';
 import 'package:frontend/models/track.dart';
 import 'package:frontend/models/album.dart';
 import 'package:frontend/models/artist.dart';
@@ -11,7 +11,6 @@ class FavoritesService {
     defaultValue: 'http://localhost:3000/api',
   );
 
-  // Track favorites
   Future<List<Map<String, dynamic>>> getLikedTracks() async {
     final response = await _http.get(
       Uri.parse('$baseUrl/favorites?type=track'),
@@ -23,7 +22,7 @@ class FavoritesService {
         if (trackJson == null) return null;
         return {
           'id': json['id'],
-          'track': Track.fromJson(trackJson),
+          'entity': Track.fromJson(trackJson),
         };
       }).whereType<Map<String, dynamic>>().toList();
     } else {
@@ -52,7 +51,6 @@ class FavoritesService {
     }
   }
 
-  // Album favorites
   Future<List<Map<String, dynamic>>> getLikedAlbums() async {
     final response = await _http.get(
       Uri.parse('$baseUrl/favorites?type=album'),
@@ -64,7 +62,7 @@ class FavoritesService {
         if (albumJson == null) return null;
         return {
           'id': json['id'].toString(),
-          'album': Album.fromJson(albumJson),
+          'entity': Album.fromJson(albumJson),
         };
       }).whereType<Map<String, dynamic>>().toList();
     } else {
@@ -93,7 +91,6 @@ class FavoritesService {
     }
   }
 
-  // Artist favorites
   Future<List<Map<String, dynamic>>> getLikedArtists() async {
     final response = await _http.get(
       Uri.parse('$baseUrl/favorites?type=artist'),
@@ -105,7 +102,7 @@ class FavoritesService {
         if (artistJson == null) return null;
         return {
           'id': json['id'],
-          'artist': Artist.fromJson(artistJson),
+          'entity': Artist.fromJson(artistJson),
         };
       }).whereType<Map<String, dynamic>>().toList();
     } else {

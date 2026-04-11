@@ -1,12 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/models/track.dart';
+import 'package:frontend/providers/liked_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/models/album.dart';
 import 'package:frontend/models/artist.dart';
 import 'package:frontend/models/playlist.dart';
-import 'package:frontend/providers/liked_albums_provider.dart';
-import 'package:frontend/providers/liked_artists_provider.dart';
-import 'package:frontend/providers/liked_tracks_provider.dart';
+
 import 'package:frontend/providers/playlist_provider.dart';
 import 'package:frontend/screens/album_detail_screen.dart';
 import 'package:frontend/screens/artist_screen.dart';
@@ -41,21 +41,21 @@ class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
     });
   }
 
-  void _fetchData() {
-    final playlistProvider = Provider.of<PlaylistProvider>(context, listen: false);
-    final likedTracksProvider = Provider.of<LikedTracksProvider>(context, listen: false);
-    final likedAlbumsProvider = Provider.of<LikedAlbumsProvider>(context, listen: false);
-    final likedArtistsProvider = Provider.of<LikedArtistsProvider>(context, listen: false);
+void _fetchData() {
+  final playlistProvider = Provider.of<PlaylistProvider>(context, listen: false);
+  final likedTracksProvider = Provider.of<LikedProvider<Track>>(context, listen: false);
+  final likedAlbumsProvider = Provider.of<LikedProvider<Album>>(context, listen: false);
+  final likedArtistsProvider = Provider.of<LikedProvider<Artist>>(context, listen: false);
 
-    try {
-      playlistProvider.fetchPlaylists();
-      likedTracksProvider.fetchLikedTracks();
-      likedAlbumsProvider.fetchLikedAlbums();
-      likedArtistsProvider.fetchLikedArtists();
-    } catch (e) {
-      if (kDebugMode) print(e);
-    }
+  try {
+    playlistProvider.fetchPlaylists();
+    likedTracksProvider.fetchLikedObjects();
+    likedAlbumsProvider.fetchLikedObjects();
+    likedArtistsProvider.fetchLikedObjects();
+  } catch (e) {
+    if (kDebugMode) print(e);
   }
+}
 
   void _goToHome() {
     _navigatorKey.currentState?.popUntil((route) => route.isFirst);

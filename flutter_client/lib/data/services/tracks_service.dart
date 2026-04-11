@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:frontend/data/services/AuthenticatedHttpClient.dart';
+import 'package:frontend/data/services/authenticated_http_client.dart';
 import 'package:frontend/data/services/auth_service.dart';
 import 'package:http/http.dart' as http;
 

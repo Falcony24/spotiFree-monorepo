@@ -1,6 +1,5 @@
 import 'dart:convert';
-import 'package:frontend/data/services/AuthenticatedHttpClient.dart';
-import 'package:frontend/models/artist.dart';
+import 'package:frontend/data/services/authenticated_http_client.dart';
 import 'package:frontend/models/album.dart';
 import 'package:frontend/models/track.dart';
 

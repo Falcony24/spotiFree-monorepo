@@ -20,7 +20,7 @@ class FavoritesRepository implements IFavoritesRepository {
     if (source == DataSource.remote) {
       final items = await _api.getLikedTracks();
       for (final item in items) {
-        await _storage.addLikedTrack(item['id'], item['track']);
+        await _storage.addLikedTrack(item['id'], item['entity']);
       }
       return items;
     } else {
@@ -59,12 +59,12 @@ class FavoritesRepository implements IFavoritesRepository {
     if (source == DataSource.remote) {
       final items = await _api.getLikedAlbums();
       for (final item in items) {
-        await _storage.addLikedAlbum(item['id'], item['album']);
+        await _storage.addLikedAlbum(item['id'], item['entity']);
       }
       return items;
     } else {
       final albums = await _storage.getLikedAlbums();
-      return albums.map((a) => {'id': '', 'album': a}).toList();
+      return albums.map((a) => {'id': '', 'entity': a}).toList();
     }
   }
 
@@ -107,12 +107,12 @@ class FavoritesRepository implements IFavoritesRepository {
     if (source == DataSource.remote) {
       final items = await _api.getLikedArtists();
       for (final item in items) {
-        await _storage.addLikedArtist(item['id'], item['artist']);
+        await _storage.addLikedArtist(item['id'], item['entity']);
       }
       return items;
     } else {
       final artists = await _storage.getLikedArtists();
-      return artists.map((a) => {'id': '', 'artist': a}).toList();
+      return artists.map((a) => {'id': '', 'entity': a}).toList();
     }
   }
 
