@@ -1,4 +1,7 @@
-class Track {
+import 'package:frontend/domain/repositories/i_likeable_entity.dart';
+
+class Track implements ILikeableEntity {
+  @override
   final String id;  //MBID
   final String title;
   final String artist;
@@ -23,6 +26,7 @@ class Track {
     );
   }
 
+  @override
   Map<String, dynamic> toJson() => {
     'id': id,
     'title': title,

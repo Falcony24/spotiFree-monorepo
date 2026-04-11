@@ -1,4 +1,7 @@
-class Artist {
+import 'package:frontend/domain/repositories/i_likeable_entity.dart';
+
+class Artist implements ILikeableEntity {
+  @override
   final String id;       //MBID
   final String name;
   final String? sortName;
@@ -15,5 +18,14 @@ class Artist {
       name: json['name'] ?? 'Nieznany artysta',
       sortName: json['sort_name'],
     );
+  }
+  
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'sort_name': sortName,
+    };
   }
 }

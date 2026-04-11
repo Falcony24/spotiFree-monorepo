@@ -1,4 +1,7 @@
-class Album {
+import 'package:frontend/domain/repositories/i_likeable_entity.dart';
+
+class Album implements ILikeableEntity {
+  @override
   final String id;      //MBID
   final String title;
   final String? artist;
@@ -18,5 +21,15 @@ class Album {
       artist: json['artist'] ?? json['artist_name'],
       coverUrl: json['cover_url'],
     );
+  }
+  
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'artist': artist,
+      'cover_url': coverUrl,
+    };
   }
 }
