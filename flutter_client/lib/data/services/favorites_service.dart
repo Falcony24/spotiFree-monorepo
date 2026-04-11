@@ -44,7 +44,7 @@ class FavoritesService {
 
   Future<void> unlikeTrack(String favoriteId) async {
     final response = await _http.delete(
-      Uri.parse('$baseUrl/favorites/$favoriteId'),
+      Uri.parse('$baseUrl/favorites/$favoriteId?type=track'),   
     );
     if (response.statusCode != 204) {
       throw Exception('Failed to unlike track');
@@ -84,7 +84,7 @@ class FavoritesService {
 
   Future<void> unlikeAlbum(String favoriteId) async {
     final response = await _http.delete(
-      Uri.parse('$baseUrl/favorites/$favoriteId'),
+      Uri.parse('$baseUrl/favorites/$favoriteId?type=album'),
     );
     if (response.statusCode != 204) {
       throw Exception('Failed to unlike album');
@@ -124,7 +124,7 @@ class FavoritesService {
 
   Future<void> unlikeArtist(String favoriteId) async {
     final response = await _http.delete(
-      Uri.parse('$baseUrl/favorites/$favoriteId'),
+      Uri.parse('$baseUrl/favorites/$favoriteId?type=artist'),
     );
     if (response.statusCode != 204) {
       throw Exception('Failed to unlike artist');

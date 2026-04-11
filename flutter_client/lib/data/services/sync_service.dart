@@ -39,8 +39,7 @@ class SyncService {
         switch (type) {
           case 'liked_track':
             if (action == 'add' && entityId != null) {
-              final track = Track.fromJson(jsonDecode(payload!));
-              await _favoritesService.likeTrack(track.id);
+              await _favoritesService.likeTrack(entityId);
             } else if (action == 'remove' && entityId != null) {
               final favId = await _storage.getFavoriteIdForTrack(entityId);
               if (favId != null) await _favoritesService.unlikeTrack(favId);
@@ -105,10 +104,10 @@ class SyncService {
       await db.delete('playlist_tracks');
 
       for (final item in likedTracks) {
-        await _storage.addLikedTrack(item['id'], item['track']);
+        await _storage.addLikedTrack(item['id'], item['entity']);
       }
       for (final item in likedAlbums) {
-        final album = item['album'];
+        final album = item['entity'];
         await _storage.addLikedAlbum(item['id'], album);
         try {
           final tracks = await _albumsService.getAlbumTracks(album.id);
@@ -118,7 +117,7 @@ class SyncService {
         }
       }
       for (final item in likedArtists) {
-        await _storage.addLikedArtist(item['id'], item['artist']);
+        await _storage.addLikedArtist(item['id'], item['entity']);
       }
       for (final playlist in playlistsData['data']) {
         await _storage.insertPlaylist(playlist);
