@@ -3,16 +3,31 @@ import { DownloadTask } from '../models/index.js';
 import { getPresignedUrl, getObjectStream, getObjectMetadata } from '../services/storage/minioClient.js';
 import downloadQueue from '../queues/downloadQueue.js';
 import mime from 'mime-types'; 
+import sequelize from '../config/database.js';
 
 async function getOrCreateTask(trackMbid) {
-  const [task, created] = await DownloadTask.findOrCreate({
-    where: { track_mbid: trackMbid },
-    defaults: { track_mbid: trackMbid, status: 'pending' }
-  });
-  if (created) {
-    await downloadQueue.add({ trackMbid: trackMbid, taskId: task.id });
+  const transaction = await sequelize.transaction();
+  try {
+    let task = await DownloadTask.findOne({
+      where: { track_mbid: trackMbid },
+      transaction,
+      lock: true,
+    });
+    if (!task) {
+      task = await DownloadTask.create(
+        { track_mbid: trackMbid, status: 'pending' },
+        { transaction }
+      );
+      await transaction.commit();
+      await downloadQueue.add({ trackMbid: trackMbid, taskId: task.id });
+    } else {
+      await transaction.commit();
+    }
+    return task;
+  } catch (err) {
+    await transaction.rollback();
+    throw err;
   }
-  return task;
 }
 
 export const stream = async (req, res, next) => {

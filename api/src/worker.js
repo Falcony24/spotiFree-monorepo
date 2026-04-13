@@ -22,4 +22,3 @@ downloadQueue.on('failed', (job, err) => {
 });
 
 console.log('Worker started, waiting for jobs...');
-setInterval(() => {}, 1000);

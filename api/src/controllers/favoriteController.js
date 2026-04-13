@@ -11,7 +11,7 @@ export const getFavorites = async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid or missing type parameter' });
     }
 
-    const userId = req.user.id;
+    const userId = req.userId;
 
     if (type === 'track') {
       const favorites = await FavoriteTrack.findAll({
@@ -118,7 +118,7 @@ export const addFavorite = async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid item_type' });
     }
 
-    const userId = req.user.id;
+    const userId = req.userId;
 
     if (item_type === 'track') {
       const recording = await Recording.findOne({ where: { gid: item_mbid } });
@@ -169,7 +169,7 @@ export const addFavorite = async (req, res, next) => {
 export const deleteFavorite = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.userId;
     const { type } = req.query;
 
     let deletedCount = 0;

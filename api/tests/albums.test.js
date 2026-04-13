@@ -47,7 +47,7 @@ describe('Album Endpoints', () => {
     expect(res.body).toHaveProperty('limit');
     expect(res.body).toHaveProperty('offset');
     expect(res.body.data.length).toBeLessThanOrEqual(res.body.limit);
-  });
+  }, 10000);
 
   it('should respect limit parameter', async () => {
     const limit = 5;

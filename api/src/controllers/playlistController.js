@@ -9,7 +9,7 @@ export const getMyPlaylists = async (req, res, next) => {
     const offset = Math.max(0, parseInt(req.query.offset) || 0);
 
     const { count, rows: playlists } = await Playlist.findAndCountAll({
-      where: { user_id: req.user.id },
+      where: { user_id: req.userId },
       order: [['created_at', 'DESC']],
       limit,
       offset,
@@ -37,7 +37,7 @@ export const createPlaylist = async (req, res, next) => {
   try {
     const { name, description, is_public } = req.body;
     const playlist = await Playlist.create({
-      user_id: req.user.id,
+      user_id: req.userId,
       name,
       description,
       is_public: is_public ?? false,
@@ -61,7 +61,7 @@ export const getPlaylist = async (req, res, next) => {
     if (!playlist) {
       return res.status(404).json({ error: 'Playlist not found' });
     }
-    if (playlist.user_id !== req.user.id && !playlist.is_public) {
+    if (playlist.user_id !== req.userId && !playlist.is_public) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
@@ -140,7 +140,7 @@ export const updatePlaylist = async (req, res, next) => {
     if (!playlist) {
       return res.status(404).json({ error: 'Playlist not found' });
     }
-    if (playlist.user_id !== req.user.id) {
+    if (playlist.user_id !== req.userId) {
       return res.status(403).json({ error: 'Forbidden' });
     }
     const { name, description, is_public } = req.body;
@@ -163,7 +163,7 @@ export const deletePlaylist = async (req, res, next) => {
     if (!playlist) {
       return res.status(404).json({ error: 'Playlist not found' });
     }
-    if (playlist.user_id !== req.user.id) {
+    if (playlist.user_id !== req.userId) {
       return res.status(403).json({ error: 'Forbidden' });
     }
     await playlist.destroy();
@@ -177,7 +177,7 @@ export const addTrack = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
     const playlist = await Playlist.findOne({ where: { gid: req.params.gid }, transaction: t });
-    if (!playlist || playlist.user_id !== req.user.id) {
+    if (!playlist || playlist.user_id !== req.userId) {
       await t.rollback();
       return res.status(403).json({ error: 'Forbidden' });
     }
@@ -238,7 +238,7 @@ export const removeTrack = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
     const playlist = await Playlist.findOne({ where: { gid: req.params.gid }, transaction: t });
-    if (!playlist || playlist.user_id !== req.user.id) {
+    if (!playlist || playlist.user_id !== req.userId) {
       await t.rollback();
       return res.status(403).json({ error: 'Forbidden' });
     }
@@ -278,7 +278,7 @@ export const reorderTracks = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
     const playlist = await Playlist.findOne({ where: { gid: req.params.gid }, transaction: t });
-    if (!playlist || playlist.user_id !== req.user.id) {
+    if (!playlist || playlist.user_id !== req.userId) {
       await t.rollback();
       return res.status(403).json({ error: 'Forbidden' });
     }

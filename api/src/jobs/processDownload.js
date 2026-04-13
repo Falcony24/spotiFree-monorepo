@@ -12,26 +12,34 @@ const execAsync = promisify(exec);
 
 export default async function processDownloadJob(job) {
   const { trackMbid, taskId } = job.data;
-  let tempFilePath = null;
+  let jobTempDir = null;
+  let finalTempFilePath = null;
 
   try {
     const metadata = await getTrackMetadata(trackMbid);
     const candidates = await findYouTubeCandidates(metadata);
     if (!candidates.length) throw new Error('No YouTube results found');
 
+    jobTempDir = path.join(os.tmpdir(), `download-job-${taskId}`);
+    if (!fs.existsSync(jobTempDir)) fs.mkdirSync(jobTempDir, { recursive: true });
+
     let bestResult = null;
     for (const candidate of candidates) {
+      const uniqueSuffix = `${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+      const candidateFilePath = path.join(jobTempDir, `candidate_${uniqueSuffix}.mp3`);
       try {
-        tempFilePath = await downloadFromYouTubeUrl(candidate.url);
+        await downloadFromYouTubeUrl(candidate.url, candidateFilePath);
+        finalTempFilePath = candidateFilePath;
         bestResult = candidate;
         break;
       } catch (err) {
         console.warn(`Failed to download ${candidate.title} (${candidate.url}): ${err.message}`);
+        if (fs.existsSync(candidateFilePath)) fs.unlinkSync(candidateFilePath);
       }
     }
     if (!bestResult) throw new Error('All YouTube attempts failed');
 
-    console.log(`Downloaded to ${tempFilePath}`);
+    console.log(`Downloaded to ${finalTempFilePath}`);
 
     const objectKey = `audio/${trackMbid}.mp3`;
     const encodeHeaderValue = (value) => {
@@ -39,7 +47,7 @@ export default async function processDownloadJob(job) {
       return /[^\x00-\x7F]/.test(value) ? encodeURIComponent(value) : value;
     };
 
-    await uploadFile(objectKey, tempFilePath, {
+    await uploadFile(objectKey, finalTempFilePath, {
       'Content-Type': 'audio/mpeg',
       'x-amz-meta-title': encodeHeaderValue(metadata.title),
       'x-amz-meta-artist': encodeHeaderValue(metadata.artist),
@@ -57,7 +65,6 @@ export default async function processDownloadJob(job) {
       { where: { id: taskId } }
     );
 
-    fs.unlinkSync(tempFilePath);
     return { success: true, objectKey };
   } catch (error) {
     console.error('Download job failed:', error);
@@ -71,12 +78,14 @@ export default async function processDownloadJob(job) {
         { where: { id: taskId } }
       );
     }
-    if (tempFilePath && fs.existsSync(tempFilePath)) {
-      fs.unlinkSync(tempFilePath);
-    }
     throw error;
+  } finally {
+    if (jobTempDir && fs.existsSync(jobTempDir)) {
+      fs.rmSync(jobTempDir, { recursive: true, force: true });
+    }
   }
 }
+
 
 async function findYouTubeCandidates(metadata) {
   const searchQuery = `${metadata.artist} - ${metadata.title}`;
@@ -129,25 +138,19 @@ async function findYouTubeCandidates(metadata) {
   return validCandidates;
 }
 
-async function downloadFromYouTubeUrl(url) {
-  const tmpDir = os.tmpdir();
-  const outputTemplate = path.join(tmpDir, '%(title)s.%(ext)s');
+async function downloadFromYouTubeUrl(url, outputFilePath) {
+  const dir = path.dirname(outputFilePath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   await ytdlp(url, {
     extractAudio: true,
     audioFormat: 'mp3',
-    output: outputTemplate,
+    output: outputFilePath,
     noPlaylist: true,
     preferFreeFormats: true,
     'js-runtime': 'node',
   });
-
-  const files = fs.readdirSync(tmpDir);
-  const mp3Files = files.filter(f => f.endsWith('.mp3'));
-  if (mp3Files.length === 0) throw new Error('No MP3 file generated');
-  const latest = mp3Files
-    .map(f => ({ name: f, time: fs.statSync(path.join(tmpDir, f)).mtimeMs }))
-    .sort((a, b) => b.time - a.time)[0].name;
-  return path.join(tmpDir, latest);
+  if (!fs.existsSync(outputFilePath)) throw new Error('MP3 file not created');
+  return outputFilePath;
 }
 
 async function getTrackMetadata(trackMbid) {
