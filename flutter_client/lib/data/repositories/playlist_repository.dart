@@ -21,7 +21,14 @@ class PlaylistRepository implements IPlaylistRepository {
   }) async {
     if (source == DataSource.remote) {
       final result = await _api.getPlaylists(limit: limit, offset: offset);
-      final playlists = result['data'] as List<Playlist>;
+      final playlists = result['data'].map<Playlist>((json) => Playlist(
+        id: json['id'], 
+        name: json['name'], 
+        description: json['description'], 
+        isPublic: json['is_public'], 
+        userId: 0, 
+        ownerName: json['owner_name'])
+        ).toList();
       for (final p in playlists) {
         await _storage.insertPlaylist(p);
       }

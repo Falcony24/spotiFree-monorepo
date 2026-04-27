@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/widgets.dart';
 import 'package:frontend/data/services/authenticated_http_client.dart';
 import 'package:frontend/models/playlist.dart';
 import 'package:frontend/models/track.dart';
@@ -16,14 +17,7 @@ class PlaylistsService {
     );
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
-      final List<dynamic> list = data['data'];
-      final List<Playlist> playlists = list.map((json) => Playlist.fromJson(json)).toList();
-      return {
-        'data': playlists,
-        'total': data['total'],
-        'limit': data['limit'],
-        'offset': data['offset'],
-      };
+      return data;
     } else {
       throw Exception('Nie udało się pobrać playlist');
     }
@@ -35,7 +29,13 @@ class PlaylistsService {
       body: jsonEncode({'name': name, 'description': description, 'is_public': isPublic}),
     );
     if (response.statusCode == 201) {
-      return Playlist.fromJson(jsonDecode(response.body));
+      final data = jsonDecode(response.body);
+      return Playlist(
+        id: data['id'],
+        name: data['name'],
+        isPublic: data['is_public'],
+        userId: 0,
+      );
     } else {
       throw Exception('Failed to create playlist');
     }
