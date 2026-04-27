@@ -5,4 +5,4 @@ export { default as PlaylistTrack } from './PlaylistTrack.js';
 export { default as DownloadTask } from './DownloadTask.js';
 export { default as FavoriteTrack } from './FavoriteTrack.js';
 export { default as FavoriteAlbum } from './FavoriteAlbum.js';
-export { default as FavoriteArtist } from './FavoriteArtist.js'
+export { default as FavoriteArtist } from './FavoriteArtist.js';

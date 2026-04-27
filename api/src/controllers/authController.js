@@ -15,7 +15,7 @@ const generateTokens = async (user) => {
     { 
       userId: user.id,
       jti: uuidv4() 
-     },
+    },
     process.env.JWT_REFRESH_SECRET,
     { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN }
   );
