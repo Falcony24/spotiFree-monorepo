@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/l10n/app_localizations.dart';
 import 'package:frontend/models/track.dart';
 import 'package:frontend/providers/liked_provider.dart';
+import 'package:frontend/widgets/download_progress_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/models/playlist.dart';
 import 'package:frontend/providers/playlist_tracks_provider.dart';
@@ -9,6 +11,7 @@ import 'package:frontend/widgets/track_tile.dart';
 
 class PlaylistDetailScreen extends StatefulWidget {
   final Playlist playlist;
+  
   const PlaylistDetailScreen({super.key, required this.playlist});
 
   @override
@@ -37,8 +40,27 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     }
   }
 
+  Future<void> _downloadPlaylist(List<Track> tracks) async {
+    final t = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => DownloadProgressDialog(
+        tracks: tracks,
+        onComplete: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(t.downloaded)),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+
     if (widget.playlist.id == 'liked_tracks') {
       return Consumer<LikedProvider<Track>>(
         builder: (context, likedProvider, child) {
@@ -49,6 +71,10 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
               backgroundColor: Colors.black,
               actions: [
                 if (likedTracks.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.download),
+                    onPressed: () => _downloadPlaylist(likedProvider.objects),
+                  ),
                   IconButton(
                     icon: const Icon(Icons.play_arrow),
                     onPressed: () {
@@ -67,7 +93,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
               child: likedProvider.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : likedTracks.isEmpty
-                      ? const Center(child: Text('Brak polubionych utworów'))
+                      ? Center(child: Text(t.emptyList))
                       : ListView.builder(
                           padding: const EdgeInsets.all(8),
                           itemCount: likedTracks.length,
@@ -91,24 +117,28 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     return Consumer<PlaylistTracksProvider>(
       builder: (context, provider, child) {
         return Scaffold(
-                      appBar: AppBar(
-                  title: Text(widget.playlist.name),
-                  backgroundColor: Colors.black,
-                  actions: [
-                    if (provider.tracks.isNotEmpty)
-                      IconButton(
-                        icon: const Icon(Icons.play_arrow),
-                        onPressed: () {
-                          final player = Provider.of<PlayerProvider>(context, listen: false);
-                          player.playTracks(provider.tracks, startIndex: 0);
-                        },
-                      ),
-                    IconButton(
-                      icon: const Icon(Icons.refresh),
-                      onPressed: _refresh,
-                    ),
-                  ],
+          appBar: AppBar(
+            title: Text(widget.playlist.name),
+            backgroundColor: Colors.black,
+            actions: [
+              if (provider.tracks.isNotEmpty)
+                  IconButton(
+                  icon: const Icon(Icons.download),
+                  onPressed: () => _downloadPlaylist(provider.tracks),
                 ),
+                IconButton(
+                  icon: const Icon(Icons.play_arrow),
+                  onPressed: () {
+                    final player = Provider.of<PlayerProvider>(context, listen: false);
+                    player.playTracks(provider.tracks, startIndex: 0);
+                  },
+                ),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: _refresh,
+              ),
+            ],
+          ),
           body: RefreshIndicator(
             onRefresh: () => _refresh(),
             child: _buildBody(provider),
@@ -119,14 +149,16 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   }
 
   Widget _buildBody(PlaylistTracksProvider provider) {
+    final t = AppLocalizations.of(context)!;
+
     if (provider.isLoading && provider.tracks.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
     if (provider.error != null) {
-      return Center(child: Text('Błąd: ${provider.error}'));
+      return Center(child: Text(t.errorOccurred(provider.error!)));
     }
     if (provider.tracks.isEmpty) {
-      return const Center(child: Text('Brak utworów w playliście'));
+      return Center(child: Text(t.emptyList));
     }
     return ListView.builder(
       padding: const EdgeInsets.all(8),

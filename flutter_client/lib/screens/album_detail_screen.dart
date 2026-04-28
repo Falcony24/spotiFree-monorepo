@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/data/services/albums_service.dart';
+import 'package:frontend/l10n/app_localizations.dart';
+import 'package:frontend/models/track.dart';
 import 'package:frontend/providers/liked_provider.dart';
+import 'package:frontend/widgets/download_progress_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/models/album.dart';
 import 'package:frontend/widgets/track_tile.dart';
@@ -56,7 +59,6 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
       _fetchMetadata();
     }
 
-    // Tworzymy providera dla tego albumu
     final modeProvider = Provider.of<ModeProvider>(context, listen: false);
     final getAlbumTracksUseCase = GetAlbumTracksUseCase(
       repository: AlbumRepository(),
@@ -67,6 +69,8 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
       getAlbumTracksUseCase: getAlbumTracksUseCase,
       modeProvider: modeProvider,
     );
+
+    _albumDetailProvider.fetchTracks();
   }
 
   Future<void> _fetchMetadata() async {
@@ -102,23 +106,38 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
     await provider.toggleLike(album);
   }
 
+  Future<void> _downloadAlbum(List<Track> tracks) async{
+    final t = AppLocalizations.of(context)!;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => DownloadProgressDialog(
+        tracks: tracks,
+        onComplete: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(t.downloaded)),
+          );
+        },
+      ),
+    );
+  }
+  
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
       value: _albumDetailProvider,
       child: Consumer<AlbumDetailProvider>(
         builder: (context, provider, child) {
-          final modeProvider = Provider.of<ModeProvider>(context);
-          if (!modeProvider.isOfflineMode && provider.tracks.isEmpty && !provider.isLoadingTracks) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              provider.fetchTracks();
-            });
-          }
           return Scaffold(
             appBar: AppBar(
               title: Text(_albumTitle ?? 'Album'),
               backgroundColor: Colors.black,
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.download),
+                  onPressed: provider.tracks.isNotEmpty ? () => _downloadAlbum(provider.tracks) : null,
+                ),
                 if (provider.tracks.isNotEmpty)
                   IconButton(
                     icon: const Icon(Icons.play_arrow),
@@ -157,14 +176,16 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
   }
 
   Widget _buildBody(AlbumDetailProvider provider) {
+    final t = AppLocalizations.of(context)!;
+    
     if (provider.isLoadingTracks && provider.tracks.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
     if (provider.errorTracks != null) {
-      return Center(child: Text('Błąd: ${provider.errorTracks}'));
+      return Center(child: Text(t.errorOccurred(provider.errorTracks!)));
     }
     if (provider.tracks.isEmpty) {
-      return const Center(child: Text('Brak utworów w tym albumie'));
+      return Center(child: Text(t.noTracksFound));
     }
     return RefreshIndicator(
       onRefresh: () => provider.fetchTracks(),

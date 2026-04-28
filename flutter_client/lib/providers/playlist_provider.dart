@@ -74,8 +74,17 @@ class PlaylistProvider extends ChangeNotifier {
       notifyListeners();
       return playlist;
     } catch (e) {
-      debugPrint('Błąd tworzenia playlisty: $e');
+      debugPrint('Error creating playlist: $e');
       return null;
+    }
+  }
+
+  Future<void> addTrackToPlaylist(String playlistId, String trackMbid) async {
+    try {
+      await managePlaylistUseCase.addTrackToPlaylist(playlistId, trackMbid);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error adding track to playlist: $e');
     }
   }
 
