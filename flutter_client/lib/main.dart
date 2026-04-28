@@ -1,10 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/data/repositories/track_repository.dart';
+import 'package:frontend/data/services/search_service.dart';
 import 'package:frontend/domain/factories/get_liked_use_case_factory.dart';
 import 'package:frontend/domain/factories/toggle_like_use_case_factory.dart';
+import 'package:frontend/domain/usecases/delete_downloaded_track_use_case.dart';
+import 'package:frontend/domain/usecases/download_track_use_case.dart';
+import 'package:frontend/domain/usecases/search_use_case.dart';
+import 'package:frontend/l10n/app_localizations.dart';
+import 'package:frontend/providers/search_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:frontend/providers/auth_provider.dart';
 import 'package:frontend/providers/mode_provider.dart';
@@ -69,7 +77,8 @@ class MyApp extends StatelessWidget {
     final playlistRepository = PlaylistRepository();
     final albumRepository = AlbumRepository();
     final artistRepository = ArtistRepository();
-
+    final trackRepository = TrackRepository();
+    
     final getLikedTracksUseCase = GetLikedUseCaseFactory.create<Track>(
       repository: favoritesRepository,
       modeProvider: modeProvider,
@@ -131,13 +140,28 @@ class MyApp extends StatelessWidget {
       repository: artistRepository,
       modeProvider: modeProvider,
     );
+    final downloadTrackUseCase = DownloadTrackUseCase(
+      repository: trackRepository,
+    );
+    final deleteDownloadedTrackUseCase = DeleteDownloadedTrackUseCase(
+      repository: trackRepository,
+    );
+    final searchUseCase = SearchUseCase(
+      searchService: SearchService()
+    );
 
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: modeProvider),
 
         ChangeNotifierProvider(create: (_) => AuthProvider()..loadUser()),
-        ChangeNotifierProvider(create: (_) => DownloadedTracksProvider()),
+
+        ChangeNotifierProvider(
+          create: (_) => DownloadedTracksProvider(
+          downloadUseCase: downloadTrackUseCase, 
+          deleteUseCase: deleteDownloadedTrackUseCase
+          )
+        ),
 
         ChangeNotifierProvider(
           create: (_) => PlaylistProvider(
@@ -203,6 +227,12 @@ class MyApp extends StatelessWidget {
             modeProvider: modeProvider,
           ),
         ),
+        ChangeNotifierProvider(
+          create: (context) => SearchProvider(
+            searchUseCase: searchUseCase,
+            modeProvider: modeProvider,
+          ),
+        ),
 
         ChangeNotifierProxyProvider2<ModeProvider, DownloadedTracksProvider, PlayerProvider>(
           create: (_) => PlayerProvider(),
@@ -212,6 +242,16 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'SpotiFree',
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('pl', 'PL'),
+          Locale('en', 'US'),
+        ],
         scaffoldMessengerKey: scaffoldMessengerKey,
         theme: ThemeData.dark().copyWith(
           primaryColor: Colors.blue,
