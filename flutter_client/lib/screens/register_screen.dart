@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/providers/auth_provider.dart';
 
@@ -17,9 +18,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
+    final t = AppLocalizations.of(context)!;
+    
     return Scaffold(
-      appBar: AppBar(title: const Text('Rejestracja')),
+      appBar: AppBar(title: Text(t.registerTitle)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -27,12 +29,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           children: [
             TextField(
               controller: _usernameController,
-              decoration: const InputDecoration(labelText: 'Nazwa użytkownika', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: t.username, border: OutlineInputBorder()),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Hasło', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: t.password, border: OutlineInputBorder()),
               obscureText: true,
             ),
             const SizedBox(height: 24),
@@ -54,7 +56,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       } catch (e) {
                         if (mounted) {
                           messenger.showSnackBar(
-                            SnackBar(content: Text('Błąd rejestracji: $e')),
+                            SnackBar(content: Text(t.errorOccurred(e.toString()))),
                           );
                         }
                       } finally {
@@ -63,12 +65,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         }
                       }
                     },
-                    child: const Text('Zarejestruj'),
+                    child: Text(t.registerButton),
                   ),
             const SizedBox(height: 16),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Masz już konto? Zaloguj się'),
+              child: Text(t.haveAccount),
             ),
           ],
         ),

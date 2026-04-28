@@ -1,20 +1,13 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/data/repositories/playlist_repository.dart';
+import 'package:frontend/l10n/app_localizations.dart';
 import 'package:frontend/providers/liked_provider.dart';
-import 'package:frontend/providers/mode_provider.dart';
 import 'package:frontend/widgets/download_button.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/models/track.dart';
 import 'package:frontend/providers/player_provider.dart';
 import 'package:frontend/providers/playlist_provider.dart';
 import 'package:frontend/providers/downloaded_tracks_provider.dart';
-import 'package:frontend/domain/usecases/manage_playlist_use_case.dart';
-import 'package:frontend/domain/usecases/search_use_case.dart';
-import 'package:frontend/data/repositories/track_repository.dart';
-import 'package:frontend/data/services/search_service.dart';
-import 'package:frontend/screens/artist_screen.dart';
 
 class TrackTile extends StatelessWidget {
   final Track track;
@@ -25,15 +18,12 @@ class TrackTile extends StatelessWidget {
   Future<void> _showAddToPlaylistDialog(BuildContext context) async {
     final playlistProvider = Provider.of<PlaylistProvider>(context, listen: false);
     final playlists = playlistProvider.playlists;
-    final managePlaylistUseCase = ManagePlaylistUseCase(
-      repository: PlaylistRepository(),
-      modeProvider: Provider.of<ModeProvider>(context, listen: false),
-    );
+    final t = AppLocalizations.of(context)!;
 
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Dodaj do playlisty'),
+        title: Text(t.addToPlaylist),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
@@ -46,16 +36,16 @@ class TrackTile extends StatelessWidget {
                 onTap: () async {
                   Navigator.pop(ctx);
                   try {
-                    await managePlaylistUseCase.addTrackToPlaylist(playlist.id, track.id);
+                    await playlistProvider.addTrackToPlaylist(playlist.id, track.id);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Dodano do ${playlist.name}')),
+                        SnackBar(content: Text(t.addedToPlaylist(playlist.name))),
                       );
                     }
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Błąd: $e')),
+                        SnackBar(content: Text('${t.downloadError} $e')),
                       );
                     }
                   }
@@ -70,7 +60,7 @@ class TrackTile extends StatelessWidget {
               Navigator.pop(ctx);
               _showCreatePlaylistDialog(context);
             },
-            child: const Text('Utwórz nową playlistę'),
+            child: Text(t.createNewPlaylist),
           ),
         ],
       ),
@@ -79,92 +69,58 @@ class TrackTile extends StatelessWidget {
 
   Future<void> _showCreatePlaylistDialog(BuildContext context) async {
     final TextEditingController nameController = TextEditingController();
-    final managePlaylistUseCase = ManagePlaylistUseCase(
-      repository: PlaylistRepository(),
-      modeProvider: Provider.of<ModeProvider>(context, listen: false),
-    );
+    final playlistProvider = Provider.of<PlaylistProvider>(context, listen: false);
+    final t = AppLocalizations.of(context)!;
 
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Nowa playlista'),
+        title: Text(t.newPlaylist),
         content: TextField(
           controller: nameController,
-          decoration: const InputDecoration(hintText: 'Nazwa playlisty'),
+          decoration: InputDecoration(hintText: t.playlistNameHint),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Anuluj'),
+            child: Text(t.cancel),
           ),
           TextButton(
             onPressed: () async {
               final name = nameController.text.trim();
               if (name.isNotEmpty) {
                 try {
-                  final playlist = await managePlaylistUseCase.createPlaylist(name);
-                  await managePlaylistUseCase.addTrackToPlaylist(playlist.id, track.id);
-                  await Provider.of<PlaylistProvider>(context, listen: false)
-                      .fetchPlaylists(refresh: true);
-                  if (context.mounted) {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Utworzono playlistę "$name" i dodano utwór')),
-                    );
+                  final playlist = await playlistProvider.createPlaylist(name);
+                  if (playlist != null) {
+                    await playlistProvider.addTrackToPlaylist(playlist.id, track.id);
+                    await playlistProvider.fetchPlaylists(refresh: true);
+                    if (context.mounted) {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(t.playlistCreated(name))),
+                      );
+                    }
                   }
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Błąd: $e')),
+                      SnackBar(content: Text('${t.downloadError} $e')),
                     );
                   }
                 }
               } else {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Nazwa nie może być pusta')),
+                    SnackBar(content: Text(t.fieldMustNotBeEmpty)),
                   );
                 }
               }
             },
-            child: const Text('Utwórz i dodaj'),
+            child: Text(t.addAndCreate),
           ),
         ],
       ),
     );
-  }
-
-  Future<void> _navigateToArtist(BuildContext context, String artistName) async {
-    if (artistName.isEmpty) return;
-    final searchUseCase = SearchUseCase(searchService: SearchService());
-    try {
-      final results = await searchUseCase.execute(artistName, type: 'artist');
-      final artistsData = results['artists'] as Map<String, dynamic>?;
-      final artists = artistsData?['data'] as List? ?? [];
-      if (artists.isNotEmpty) {
-        final artistId = artists.first['id'].toString();
-        if (context.mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ArtistScreen(artistId: artistId),
-            ),
-          );
-        }
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Nie znaleziono artysty')),
-          );
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Błąd wyszukiwania: $e')),
-        );
-      }
-    }
   }
 
   String _formatDuration(Duration duration) {
@@ -180,121 +136,171 @@ class TrackTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final likedProvider = Provider.of<LikedProvider<Track>>(context);
     final isLiked = likedProvider.isLiked(track.id);
-    final trackRepository = TrackRepository();
+    final downloadedProvider = Provider.of<DownloadedTracksProvider>(context);
+    final isDownloaded = downloadedProvider.isDownloaded(track.id);
+    final t = AppLocalizations.of(context)!;
 
-    return ListTile(
-      leading: const Icon(Icons.music_note),
-      title: Text(track.title),
-      subtitle: track.artist.isNotEmpty
-          ? Row(
-              children: [
-                GestureDetector(
-                  onTap: () => _navigateToArtist(context, track.artist),
-                  child: Text(
-                    track.artist,
-                    style: const TextStyle(color: Colors.grey, decoration: TextDecoration.underline),
-                  ),
-                ),
-                if (track.duration != null) ...[
-                  const SizedBox(width: 8),
-                  Text(
-                    _formatDuration(Duration(milliseconds: track.duration!)),
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                ],
-              ],
-            )
-          : (track.duration != null
-              ? Text(
-                  _formatDuration(Duration(seconds: track.duration!)),
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        bool showLikeInline = false;
+        bool showDownloadInline = false;
+
+        if (width > 600) {
+          showLikeInline = true;
+          showDownloadInline = !kIsWeb;
+        } else if (width > 450) {
+          showLikeInline = true;
+          showDownloadInline = false;
+        } else {
+          showLikeInline = false;
+          showDownloadInline = false;
+        }
+
+        return ListTile(
+          leading: const Icon(Icons.music_note),
+          title: Text(track.title),
+          subtitle: track.artist.isNotEmpty
+              ? Row(
+                  children: [
+                    GestureDetector(
+                      child: Text(
+                        track.artist,
+                        style: const TextStyle(color: Colors.grey, decoration: TextDecoration.underline),
+                      ),
+                    ),
+                    if (track.duration != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        _formatDuration(Duration(milliseconds: track.duration!)),
+                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                    ],
+                  ],
                 )
-              : null),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: Icon(
-              isLiked ? Icons.favorite : Icons.favorite_border,
-              color: isLiked ? Colors.green : Colors.white,
-            ),
-            onPressed: () => likedProvider.toggleLike(track),
-          ),
-          if (!kIsWeb)
-            Consumer<DownloadedTracksProvider>(
-              builder: (context, downloadedProvider, child) {
-                final isDownloaded = downloadedProvider.isDownloaded(track.id);
-                return DownloadButton(
+              : (track.duration != null
+                  ? Text(
+                      _formatDuration(Duration(seconds: track.duration!)),
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    )
+                  : null),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showLikeInline)
+                IconButton(
+                  icon: Icon(
+                    isLiked ? Icons.favorite : Icons.favorite_border,
+                    color: isLiked ? Colors.green : Colors.white,
+                  ),
+                  onPressed: () => likedProvider.toggleLike(track),
+                ),
+              if (showDownloadInline)
+                DownloadButton(
                   track: track,
                   isDownloaded: isDownloaded,
                   onDownload: () async {
                     try {
-                      await trackRepository.downloadTrack(track);
-                      final path = await trackRepository.getDownloadedFilePath(track.id) ?? '';
-                      await downloadedProvider.addDownloadedTrack(track, path);
+                      await downloadedProvider.downloadTrack(track);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Pobrano: ${track.title}')),
+                          SnackBar(content: Text('${t.download} ${track.title}')),
                         );
                       }
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Błąd pobierania: $e')),
+                          SnackBar(content: Text(t.downloadError(e.toString()))),
                         );
                       }
                     }
                   },
                   onDelete: () async {
-                    final filePath = downloadedProvider.getFilePath(track.id);
-                    if (filePath != null) {
-                      final file = File(filePath);
-                      if (await file.exists()) await file.delete();
-                    }
-                    await trackRepository.removeDownloadedTrack(track.id);
-                    await downloadedProvider.removeDownloadedTrack(track.id);
+                    await downloadedProvider.deleteTrack(track);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Usunięto: ${track.title}')),
+                        SnackBar(content: Text('${t.deleteDownloaded} ${track.title}')),
                       );
                     }
                   },
-                );
-              },
-            ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              if (value == 'add_to_playlist') {
-                _showAddToPlaylistDialog(context);
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'add_to_playlist',
-                child: Row(
-                  children: [
-                    Icon(Icons.playlist_add),
-                    SizedBox(width: 8),
-                    Text('Dodaj do playlisty'),
-                  ],
                 ),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                onSelected: (value) {
+                  if (value == 'add_to_playlist') {
+                    _showAddToPlaylistDialog(context);
+                  } else if (value == 'like') {
+                    likedProvider.toggleLike(track);
+                  } else if (value == 'download') {
+                    if (isDownloaded) {
+                      downloadedProvider.deleteTrack(track);
+                    } else {
+                      downloadedProvider.downloadTrack(track);
+                    }
+                  }
+                },
+                itemBuilder: (context) {
+                  final items = <PopupMenuEntry<String>>[];
+                  if (!showLikeInline) {
+                    items.add(
+                      PopupMenuItem(
+                        value: 'like',
+                        child: Row(
+                          children: [
+                            Icon(isLiked ? Icons.favorite : Icons.favorite_border,
+                                color: isLiked ? Colors.green : Colors.white),
+                            const SizedBox(width: 8),
+                            Text(isLiked ? t.unlike : t.like),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  if (!kIsWeb && !showDownloadInline) {
+                    items.add(
+                      PopupMenuItem(
+                        value: 'download',
+                        child: Row(
+                          children: [
+                            Icon(isDownloaded ? Icons.check_circle : Icons.download,
+                                color: isDownloaded ? Colors.green : Colors.white),
+                            const SizedBox(width: 8),
+                            Text(isDownloaded ? t.deleteDownloaded : t.download),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  items.add(
+                    PopupMenuItem(
+                      value: 'add_to_playlist',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.playlist_add),
+                          const SizedBox(width: 8),
+                          Text(t.addToPlaylist),
+                        ],
+                      ),
+                    ),
+                  );
+                  return items;
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.play_arrow),
+                onPressed: () {
+                  if (onPlay != null) {
+                    onPlay!();
+                  } else {
+                    final player = Provider.of<PlayerProvider>(context, listen: false);
+                    player.play(track);
+                  }
+                },
               ),
             ],
           ),
-          IconButton(
-            icon: const Icon(Icons.play_arrow),
-            onPressed: () {
-              if (onPlay != null) {
-                onPlay!();
-              } else {
-                final player = Provider.of<PlayerProvider>(context, listen: false);
-                player.play(track);
-              }
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

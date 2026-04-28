@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/l10n/app_localizations.dart';
 import 'package:frontend/providers/mode_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/providers/playlist_provider.dart';
-import 'package:frontend/providers/liked_provider.dart'; // nowy
+import 'package:frontend/providers/liked_provider.dart'; 
 import 'package:frontend/providers/auth_provider.dart';
 import 'package:frontend/models/playlist.dart';
 import 'package:frontend/models/album.dart';
@@ -37,7 +38,8 @@ class _LeftPanelState extends State<LeftPanel> {
     final albumsProvider = Provider.of<LikedProvider<Album>>(context);
     final artistsProvider = Provider.of<LikedProvider<Artist>>(context);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
+    final t = AppLocalizations.of(context)!;
+    
     return Container(
       color: Colors.grey[900],
       child: Column(
@@ -74,7 +76,7 @@ class _LeftPanelState extends State<LeftPanel> {
             Consumer<ModeProvider>(
               builder: (context, modeProvider, child) {
                 return SwitchListTile(
-                  title: const Text('Tryb offline'),
+                  title: Text(t.offlineMode),
                   value: modeProvider.isOfflineMode,
                   onChanged: modeProvider.hasInternet
                       ? (value) => modeProvider.setOfflineMode(value)
@@ -88,7 +90,7 @@ class _LeftPanelState extends State<LeftPanel> {
             ),
             ListTile(
               leading: const Icon(Icons.logout),
-              title: const Text('Wyloguj'),
+              title: Text(t.logout),
               onTap: () async {
                 await authProvider.logout();
               },
@@ -127,6 +129,8 @@ class _LeftPanelState extends State<LeftPanel> {
   }
 
   Widget _buildContent(PlaylistProvider playlistProvider, LikedProvider<Album> albumsProvider, LikedProvider<Artist> artistsProvider) {
+    final t = AppLocalizations.of(context)!;
+    
     if (_selectedTab == 0) {
       if (playlistProvider.isLoading) return const Center(child: CircularProgressIndicator());
       if (widget.isCollapsed) {
@@ -138,8 +142,8 @@ class _LeftPanelState extends State<LeftPanel> {
               icon: const Icon(Icons.favorite, color: Colors.green),
               onPressed: () => widget.onPlaylistSelected(Playlist(
                 id: 'liked_tracks',
-                name: 'Polubione utwory',
-                description: 'Twoje ulubione utwory',
+                name: t.likedTracks,
+                description: t.likedTracksDescription,
                 isPublic: false,
                 userId: 0,
               )),
@@ -158,11 +162,11 @@ class _LeftPanelState extends State<LeftPanel> {
           children: [
             ListTile(
               leading: const Icon(Icons.favorite, color: Colors.green),
-              title: const Text('Polubione utwory'),
+              title: Text(t.likedTracks),
               onTap: () => widget.onPlaylistSelected(Playlist(
                 id: 'liked_tracks',
-                name: 'Polubione utwory',
-                description: 'Twoje ulubione utwory',
+                name: t.likedTracks,
+                description: t.likedTracksDescription,
                 isPublic: false,
                 userId: 0,
               )),
@@ -178,16 +182,16 @@ class _LeftPanelState extends State<LeftPanel> {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (ctx) => AlertDialog(
-                        title: const Text('Usuń playlistę'),
-                        content: Text('Czy na pewno chcesz usunąć playlistę "${playlist.name}"?'),
+                        title: Text(t.deletePlaylist),
+                        content: Text(t.confirmDeletePlaylist(playlist.name)),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, false),
-                            child: const Text('Anuluj'),
+                            child: Text(t.cancel),
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(ctx, true),
-                            child: const Text('Usuń', style: TextStyle(color: Colors.red)),
+                            child: Text(t.delete, style: TextStyle(color: Colors.red)),
                           ),
                         ],
                       ),
@@ -198,13 +202,13 @@ class _LeftPanelState extends State<LeftPanel> {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete, size: 18),
-                        SizedBox(width: 8),
-                        Text('Usuń playlistę'),
+                        const Icon(Icons.delete, size: 18),
+                        const SizedBox(width: 8),
+                        Text(t.deletePlaylist),
                       ],
                     ),
                   ),
@@ -217,7 +221,7 @@ class _LeftPanelState extends State<LeftPanel> {
       }
     } else if (_selectedTab == 1) {
       if (albumsProvider.isLoading) return const Center(child: CircularProgressIndicator());
-      if (albumsProvider.objects.isEmpty) return const Center(child: Text('Brak polubionych albumów'));
+      if (albumsProvider.objects.isEmpty) return Center(child: Text(t.noLikedAlbums));
       if (widget.isCollapsed) {
         return ListView.builder(
           shrinkWrap: true,
@@ -249,7 +253,7 @@ class _LeftPanelState extends State<LeftPanel> {
       }
     } else {
       if (artistsProvider.isLoading) return const Center(child: CircularProgressIndicator());
-      if (artistsProvider.objects.isEmpty) return const Center(child: Text('Brak polubionych artystów'));
+      if (artistsProvider.objects.isEmpty) return Center(child: Text(t.noLikedArtists));
       if (widget.isCollapsed) {
         return ListView.builder(
           shrinkWrap: true,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/l10n/app_localizations.dart';
 
 class SearchBarWidget extends StatelessWidget {
   final Function(String) onSearch;
@@ -8,6 +9,7 @@ class SearchBarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = TextEditingController();
+    final t = AppLocalizations.of(context)!;
 
     return Container(
       decoration: BoxDecoration(
@@ -17,7 +19,7 @@ class SearchBarWidget extends StatelessWidget {
       child: TextField(
         controller: controller,
         decoration: InputDecoration(
-          hintText: 'Szukaj artystów, albumów, utworów...',
+          hintText: t.searchHint,
           prefixIcon: const Icon(Icons.search),
           suffixIcon: IconButton(
             icon: const Icon(Icons.clear),

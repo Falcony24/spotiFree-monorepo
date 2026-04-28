@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/l10n/app_localizations.dart';
 import 'package:frontend/widgets/album_grid_item.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/providers/albums_provider.dart';
@@ -31,21 +32,22 @@ class _CatalogScreenState extends State<CatalogScreen> {
   Widget build(BuildContext context) {
     final provider = Provider.of<AlbumsProvider>(context);
     final mode = Provider.of<ModeProvider>(context);
-
+    final t = AppLocalizations.of(context)!;
+    
     if (mode.isOfflineMode && provider.albums.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.wifi_off, size: 48, color: Colors.grey),
             SizedBox(height: 16),
             Text(
-              'Tryb offline – brak zapisanych albumów',
+              t.offlineNoAlbums,
               style: TextStyle(color: Colors.grey),
             ),
             SizedBox(height: 8),
             Text(
-              'Wyłącz tryb offline, aby przeglądać katalog',
+              t.offlineTurnOff,
               style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
           ],
@@ -58,7 +60,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
     }
 
     if (provider.albums.isEmpty) {
-      return const Center(child: Text('Brak albumów do wyświetlenia'));
+      return Center(child: Text(t.noAlbums));
     }
 
     return NotificationListener<ScrollNotification>(

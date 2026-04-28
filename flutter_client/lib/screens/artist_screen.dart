@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/l10n/app_localizations.dart';
 import 'package:frontend/utils/responsive.dart';
 import 'package:frontend/widgets/album_grid_item.dart';
 import 'package:provider/provider.dart';
@@ -49,7 +50,8 @@ class _ArtistScreenState extends State<ArtistScreen> {
     final detailsProvider = Provider.of<ArtistDetailsProvider>(context);
     final albumsProvider = Provider.of<ArtistAlbumsProvider>(context);
     final tracksProvider = Provider.of<ArtistTracksProvider>(context);
-
+    final t = AppLocalizations.of(context)!;
+    
     final artist = widget.artist ?? detailsProvider.artist;
 
     return Scaffold(
@@ -82,12 +84,12 @@ class _ArtistScreenState extends State<ArtistScreen> {
                   ],
                 ),
               ),
-            const Text('Utwory', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(t.tracks , style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             if (tracksProvider.isLoading && tracksProvider.tracks.isEmpty)
               const Center(child: CircularProgressIndicator())
             else if (tracksProvider.tracks.isEmpty)
-              const Text('Brak utworów')
+              Text(t.noTracksFound)
             else
               ListView.builder(
                 shrinkWrap: true,
@@ -99,16 +101,16 @@ class _ArtistScreenState extends State<ArtistScreen> {
               Center(
                 child: TextButton(
                   onPressed: () => tracksProvider.loadMore(_artistId),
-                  child: const Text('Wczytaj więcej utworów'),
+                  child: Text(t.loadMore),
                 ),
               ),
             const SizedBox(height: 24),
-            const Text('Albumy', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(t.albums, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             if (albumsProvider.isLoading && albumsProvider.albums.isEmpty)
               const Center(child: CircularProgressIndicator())
             else if (albumsProvider.albums.isEmpty)
-              const Text('Brak albumów')
+              Text(t.noAlbumsFound)
             else
               LayoutBuilder(
                 builder: (context, constraints) {
@@ -144,7 +146,7 @@ class _ArtistScreenState extends State<ArtistScreen> {
               Center(
                 child: TextButton(
                   onPressed: () => albumsProvider.loadMore(_artistId),
-                  child: const Text('Wczytaj więcej albumów'),
+                  child: Text(t.loadMore),
                 ),
               ),
           ],

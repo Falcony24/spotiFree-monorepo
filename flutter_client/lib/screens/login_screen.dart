@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/providers/auth_provider.dart';
 import 'package:frontend/screens/register_screen.dart';
@@ -18,9 +19,10 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
+    final t = AppLocalizations.of(context)!;
+    
     return Scaffold(
-      appBar: AppBar(title: const Text('Logowanie')),
+      appBar: AppBar(title: Text(t.loginTitle)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -28,13 +30,13 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             TextField(
               controller: _usernameController,
-              decoration: const InputDecoration(labelText: 'Nazwa użytkownika', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: t.username, border: OutlineInputBorder()),
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Hasło', border: OutlineInputBorder()),
+              decoration: InputDecoration(labelText: t.password, border: OutlineInputBorder()),
               obscureText: true,
             ),
             const SizedBox(height: 24),
@@ -54,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       } catch (e) {
                         if (mounted && context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Błąd logowania: $e')),
+                            SnackBar(content: Text(t.errorOccurred(e.toString()))),
                           );
                         }
                       } finally {
@@ -63,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         }
                       }
                     },
-                    child: const Text('Zaloguj'),
+                    child: Text(t.loginButton),
                   ),
             const SizedBox(height: 16),
             TextButton(
@@ -71,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 context,
                 MaterialPageRoute(builder: (context) => const RegisterScreen()),
               ),
-              child: const Text('Nie masz konta? Zarejestruj się'),
+              child: Text(t.noAccount),
             ),
           ],
         ),
