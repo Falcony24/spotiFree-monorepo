@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:frontend/data/services/authenticated_http_client.dart';
 import 'package:frontend/data/services/auth_service.dart';
 import 'package:http/http.dart' as http;
+import 'package:frontend/utils/constants.dart' as constants;
 
 class PendingException implements Exception {
   final String message;
@@ -10,11 +11,12 @@ class PendingException implements Exception {
 }
 
 class TracksService {
-  final AuthenticatedHttpClient _http = AuthenticatedHttpClient();
-  static const String baseUrl = String.fromEnvironment(
-    'API_URL',
-    defaultValue: 'http://localhost:3000/api',
-  );
+  final AuthenticatedHttpClient _http;
+  final String _baseUrl;
+
+  TracksService({String? baseUrl, AuthenticatedHttpClient? http})
+      : _baseUrl = baseUrl ?? constants.baseUrl,
+        _http = http ?? AuthenticatedHttpClient();
 
   Future<http.StreamedResponse> getAudioStream(String trackMbid) async {
     final token = await AuthService().getAccessToken();
@@ -22,7 +24,7 @@ class TracksService {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
-    final request = http.Request('GET', Uri.parse('$baseUrl/tracks/$trackMbid/audio'));
+    final request = http.Request('GET', Uri.parse('$_baseUrl/tracks/$trackMbid/audio'));
     request.headers.addAll(headers);
     final response = await request.send();
 
@@ -39,7 +41,7 @@ class TracksService {
 
   Future<String> getPresignedStreamUrl(String trackMbid) async {
     final response = await _http.get(
-      Uri.parse('$baseUrl/tracks/$trackMbid/stream'),
+      Uri.parse('$_baseUrl/tracks/$trackMbid/stream'),
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -57,7 +59,7 @@ class TracksService {
 
   Future<Map<String, dynamic>> getTaskStatus(int taskId) async {
     final response = await _http.get(
-      Uri.parse('$baseUrl/tracks/tasks/$taskId'),
+      Uri.parse('$_baseUrl/tracks/tasks/$taskId'),
     );
     if (response.statusCode == 200) {
       return jsonDecode(response.body);

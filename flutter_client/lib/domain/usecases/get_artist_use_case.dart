@@ -1,6 +1,6 @@
 import 'package:frontend/domain/repositories/i_artist_repository.dart';
 import 'package:frontend/models/artist.dart';
-import 'package:frontend/constants.dart';
+import 'package:frontend/utils/constants.dart';
 import 'package:frontend/providers/mode_provider.dart';
 
 class GetArtistUseCase {

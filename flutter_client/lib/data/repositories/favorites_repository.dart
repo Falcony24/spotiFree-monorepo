@@ -1,4 +1,4 @@
-import 'package:frontend/constants.dart';
+import 'package:frontend/utils/constants.dart';
 import 'package:frontend/data/services/offline_storage.dart';
 import 'package:frontend/data/services/favorites_service.dart';
 import 'package:frontend/domain/repositories/i_favorites_repository.dart';

@@ -1,31 +1,32 @@
 import 'dart:convert';
-import 'package:flutter/widgets.dart';
 import 'package:frontend/data/services/authenticated_http_client.dart';
 import 'package:frontend/models/playlist.dart';
 import 'package:frontend/models/track.dart';
+import 'package:frontend/utils/constants.dart' as constants;
 
 class PlaylistsService {
-  final AuthenticatedHttpClient _http = AuthenticatedHttpClient();
-  static const String baseUrl = String.fromEnvironment(
-    'API_URL',
-    defaultValue: 'http://localhost:3000/api',
-  );
+  final AuthenticatedHttpClient _http;
+  final String _baseUrl;
+
+  PlaylistsService({String? baseUrl, AuthenticatedHttpClient? http}) 
+    : _baseUrl = baseUrl ?? constants.baseUrl, 
+    _http = http ?? AuthenticatedHttpClient();
 
   Future<Map<String, dynamic>> getPlaylists({int limit = 20, int offset = 0}) async {
     final response = await _http.get(
-      Uri.parse('$baseUrl/playlists?limit=$limit&offset=$offset'),
+      Uri.parse('$_baseUrl/playlists?limit=$limit&offset=$offset'),
     );
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = jsonDecode(response.body);
       return data;
     } else {
-      throw Exception('Nie udało się pobrać playlist');
+      throw Exception('Failed to load playlists');
     }
   }
 
   Future<Playlist> createPlaylist(String name, {String? description, bool isPublic = false}) async {
     final response = await _http.post(
-      Uri.parse('$baseUrl/playlists'),
+      Uri.parse('$_baseUrl/playlists'),
       body: jsonEncode({'name': name, 'description': description, 'is_public': isPublic}),
     );
     if (response.statusCode == 201) {
@@ -43,7 +44,7 @@ class PlaylistsService {
 
   Future<void> deletePlaylist(String playlistId) async {
     final response = await _http.delete(
-      Uri.parse('$baseUrl/playlists/$playlistId'),
+      Uri.parse('$_baseUrl/playlists/$playlistId'),
     );
     if (response.statusCode != 204) {
       throw Exception('Failed to delete playlist');
@@ -52,7 +53,7 @@ class PlaylistsService {
 
   Future<Map<String, dynamic>> getPlaylistDetail(String playlistId) async {
     final response = await _http.get(
-      Uri.parse('$baseUrl/playlists/$playlistId'),
+      Uri.parse('$_baseUrl/playlists/$playlistId'),
     );
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
@@ -62,13 +63,13 @@ class PlaylistsService {
           .toList();
       return {'playlist': playlist, 'tracks': tracks};
     } else {
-      throw Exception('Nie udało się pobrać playlisty');
+      throw Exception('Failed to load playlist details');
     }
   }
 
   Future<void> addTrackToPlaylist(String playlistId, String trackMbid) async {
     final response = await _http.post(
-      Uri.parse('$baseUrl/playlists/$playlistId/tracks'),
+      Uri.parse('$_baseUrl/playlists/$playlistId/tracks'),
       body: jsonEncode({'track_mbid': trackMbid}),
     );
     if (response.statusCode != 201) {
@@ -78,7 +79,7 @@ class PlaylistsService {
 
   Future<void> removeTrackFromPlaylist(String playlistId, String trackMbid) async {
     final response = await _http.delete(
-      Uri.parse('$baseUrl/playlists/$playlistId/tracks/$trackMbid'),
+      Uri.parse('$_baseUrl/playlists/$playlistId/tracks/$trackMbid'),
     );
     if (response.statusCode != 204) {
       throw Exception('Failed to remove track from playlist');
@@ -87,7 +88,7 @@ class PlaylistsService {
 
   Future<void> reorderPlaylistTracks(String playlistId, List<Map<String, dynamic>> newOrder) async {
     final response = await _http.put(
-      Uri.parse('$baseUrl/playlists/$playlistId/tracks/reorder'),
+      Uri.parse('$_baseUrl/playlists/$playlistId/tracks/reorder'),
       body: jsonEncode(newOrder),
     );
     if (response.statusCode != 200) {
@@ -97,7 +98,7 @@ class PlaylistsService {
 
   Future<Playlist> updatePlaylist(String playlistId, {String? name, String? description, bool? isPublic}) async {
     final response = await _http.put(
-      Uri.parse('$baseUrl/playlists/$playlistId'),
+      Uri.parse('$_baseUrl/playlists/$playlistId'),
       body: jsonEncode({
         'name': name,
         'description': description,

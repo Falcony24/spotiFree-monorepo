@@ -2,7 +2,7 @@ import 'package:frontend/data/services/offline_storage.dart';
 import 'package:frontend/domain/repositories/i_playlist_repository.dart';
 import 'package:frontend/data/services/playlists_service.dart';
 import 'package:frontend/models/playlist.dart';
-import 'package:frontend/constants.dart';
+import 'package:frontend/utils/constants.dart';
 
 class PlaylistRepository implements IPlaylistRepository {
   final PlaylistsService _api;

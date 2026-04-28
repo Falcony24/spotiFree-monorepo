@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'package:frontend/data/services/authenticated_http_client.dart';
 import 'package:frontend/models/track.dart';
+import 'package:frontend/utils/constants.dart' as constants;
 
 class AlbumsService {
-  final AuthenticatedHttpClient _http = AuthenticatedHttpClient();
-  static const String baseUrl = String.fromEnvironment(
-    'API_URL',
-    defaultValue: 'http://localhost:3000/api',
-  );
+  final AuthenticatedHttpClient _http;
+  final String baseUrl;
+
+  AlbumsService({String? baseUrl, AuthenticatedHttpClient? httpClient})
+      : baseUrl = baseUrl ?? constants.baseUrl,
+        _http = httpClient ?? AuthenticatedHttpClient();
 
   Future<Map<String, dynamic>> getAlbums({int limit = 20, int offset = 0}) async {
     final response = await _http.get(
@@ -16,7 +18,7 @@ class AlbumsService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Nie udało się pobrać albumów');
+      throw Exception('Failed to fetch albums');
     }
   }
 
@@ -39,7 +41,7 @@ class AlbumsService {
       final List data = jsonDecode(response.body);
       return data.map((json) => Track.fromJson(json)).toList();
     } else {
-      throw Exception('Nie udało się pobrać utworów albumu');
+      throw Exception('Failed to fetch album tracks');
     }
   }
 }

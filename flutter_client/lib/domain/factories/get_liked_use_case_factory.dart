@@ -1,4 +1,4 @@
-import 'package:frontend/constants.dart';
+import 'package:frontend/utils/constants.dart';
 import 'package:frontend/domain/repositories/i_favorites_repository.dart';
 import 'package:frontend/domain/repositories/get_liked_strategy.dart';
 import 'package:frontend/domain/usecases/get_liked_use_case.dart';

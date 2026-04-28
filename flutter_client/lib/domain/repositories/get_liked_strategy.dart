@@ -1,4 +1,4 @@
-import 'package:frontend/constants.dart';
+import 'package:frontend/utils/constants.dart';
 
 class GetLikedStrategy<T> {
   final Future<List<Map<String, dynamic>>> Function({

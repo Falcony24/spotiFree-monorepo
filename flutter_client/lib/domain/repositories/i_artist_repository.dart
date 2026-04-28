@@ -1,7 +1,7 @@
 import 'package:frontend/models/artist.dart';
 import 'package:frontend/models/album.dart';
 import 'package:frontend/models/track.dart';
-import 'package:frontend/constants.dart';
+import 'package:frontend/utils/constants.dart';
 
 
 abstract class IArtistRepository {

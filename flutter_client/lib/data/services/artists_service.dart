@@ -2,13 +2,15 @@ import 'dart:convert';
 import 'package:frontend/data/services/authenticated_http_client.dart';
 import 'package:frontend/models/album.dart';
 import 'package:frontend/models/track.dart';
+import 'package:frontend/utils/constants.dart' as constants;
 
 class ArtistsService {
-  final AuthenticatedHttpClient _http = AuthenticatedHttpClient();
-  static const String baseUrl = String.fromEnvironment(
-    'API_URL',
-    defaultValue: 'http://localhost:3000/api',
-  );
+  final AuthenticatedHttpClient _http;
+  final String baseUrl;
+
+  ArtistsService({String? baseUrl, AuthenticatedHttpClient? httpClient})
+      : baseUrl = baseUrl ?? constants.baseUrl,
+        _http = httpClient ?? AuthenticatedHttpClient();
 
   Future<Map<String, dynamic>> getArtist(String artistMbid) async {
     final response = await _http.get(

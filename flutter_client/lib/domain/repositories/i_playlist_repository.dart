@@ -1,5 +1,5 @@
 import 'package:frontend/models/playlist.dart';
-import 'package:frontend/constants.dart';
+import 'package:frontend/utils/constants.dart';
 
 abstract class IPlaylistRepository {
   Future<List<Playlist>> getPlaylists({required DataSource source, int limit = 20, int offset = 0, bool forceRefresh = false});

@@ -1,6 +1,6 @@
 import 'package:frontend/domain/repositories/i_playlist_repository.dart';
 import 'package:frontend/models/track.dart';
-import 'package:frontend/constants.dart';
+import 'package:frontend/utils/constants.dart';
 import 'package:frontend/providers/mode_provider.dart';
 
 class GetPlaylistTracksUseCase {

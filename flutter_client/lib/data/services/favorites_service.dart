@@ -3,17 +3,19 @@ import 'package:frontend/data/services/authenticated_http_client.dart';
 import 'package:frontend/models/track.dart';
 import 'package:frontend/models/album.dart';
 import 'package:frontend/models/artist.dart';
+import 'package:frontend/utils/constants.dart' as constants;
 
 class FavoritesService {
-  final AuthenticatedHttpClient _http = AuthenticatedHttpClient();
-  static const String baseUrl = String.fromEnvironment(
-    'API_URL',
-    defaultValue: 'http://localhost:3000/api',
-  );
+  final AuthenticatedHttpClient _http ;
+  final String _baseUrl;
+
+  FavoritesService({String? baseUrl, AuthenticatedHttpClient? http}) 
+    : _baseUrl = baseUrl ?? constants.baseUrl, 
+    _http = http ?? AuthenticatedHttpClient();
 
   Future<List<Map<String, dynamic>>> getLikedTracks() async {
     final response = await _http.get(
-      Uri.parse('$baseUrl/favorites?type=track'),
+      Uri.parse('$_baseUrl/favorites?type=track'),
     );
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
@@ -32,7 +34,7 @@ class FavoritesService {
 
   Future<Map<String, dynamic>> likeTrack(String trackMbid) async {
     final response = await _http.post(
-      Uri.parse('$baseUrl/favorites'),
+      Uri.parse('$_baseUrl/favorites'),
       body: jsonEncode({'item_type': 'track', 'item_mbid': trackMbid}),
     );
     if (response.statusCode == 201) {
@@ -44,7 +46,7 @@ class FavoritesService {
 
   Future<void> unlikeTrack(String favoriteId) async {
     final response = await _http.delete(
-      Uri.parse('$baseUrl/favorites/$favoriteId?type=track'),   
+      Uri.parse('$_baseUrl/favorites/$favoriteId?type=track'),   
     );
     if (response.statusCode != 204) {
       throw Exception('Failed to unlike track');
@@ -53,7 +55,7 @@ class FavoritesService {
 
   Future<List<Map<String, dynamic>>> getLikedAlbums() async {
     final response = await _http.get(
-      Uri.parse('$baseUrl/favorites?type=album'),
+      Uri.parse('$_baseUrl/favorites?type=album'),
     );
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
@@ -72,7 +74,7 @@ class FavoritesService {
 
   Future<Map<String, dynamic>> likeAlbum(String albumMbid) async {
     final response = await _http.post(
-      Uri.parse('$baseUrl/favorites'),
+      Uri.parse('$_baseUrl/favorites'),
       body: jsonEncode({'item_type': 'album', 'item_mbid': albumMbid}),
     );
     if (response.statusCode == 201) {
@@ -84,7 +86,7 @@ class FavoritesService {
 
   Future<void> unlikeAlbum(String favoriteId) async {
     final response = await _http.delete(
-      Uri.parse('$baseUrl/favorites/$favoriteId?type=album'),
+      Uri.parse('$_baseUrl/favorites/$favoriteId?type=album'),
     );
     if (response.statusCode != 204) {
       throw Exception('Failed to unlike album');
@@ -93,7 +95,7 @@ class FavoritesService {
 
   Future<List<Map<String, dynamic>>> getLikedArtists() async {
     final response = await _http.get(
-      Uri.parse('$baseUrl/favorites?type=artist'),
+      Uri.parse('$_baseUrl/favorites?type=artist'),
     );
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
@@ -112,7 +114,7 @@ class FavoritesService {
 
   Future<Map<String, dynamic>> likeArtist(String artistMbid) async {
     final response = await _http.post(
-      Uri.parse('$baseUrl/favorites'),
+      Uri.parse('$_baseUrl/favorites'),
       body: jsonEncode({'item_type': 'artist', 'item_mbid': artistMbid}),
     );
     if (response.statusCode == 201) {
@@ -124,7 +126,7 @@ class FavoritesService {
 
   Future<void> unlikeArtist(String favoriteId) async {
     final response = await _http.delete(
-      Uri.parse('$baseUrl/favorites/$favoriteId?type=artist'),
+      Uri.parse('$_baseUrl/favorites/$favoriteId?type=artist'),
     );
     if (response.statusCode != 204) {
       throw Exception('Failed to unlike artist');

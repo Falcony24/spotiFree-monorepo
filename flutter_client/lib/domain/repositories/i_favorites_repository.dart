@@ -1,5 +1,5 @@
 import 'package:frontend/models/track.dart';
-import 'package:frontend/constants.dart';
+import 'package:frontend/utils/constants.dart';
 
 abstract class IFavoritesRepository {
   Future<List<Map<String, dynamic>>> getLikedTracks({required DataSource source, bool forceRefresh = false});
