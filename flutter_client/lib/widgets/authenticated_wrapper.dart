@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/l10n/app_localizations.dart';
 import 'package:frontend/models/track.dart';
 import 'package:frontend/providers/liked_provider.dart';
+import 'package:frontend/providers/mode_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/models/album.dart';
 import 'package:frontend/models/artist.dart';
@@ -25,7 +27,7 @@ class AuthenticatedWrapper extends StatefulWidget {
 }
 
 class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();  
   bool _isLeftPanelCollapsed = false;
 
   String? _currentPlaylistId;
@@ -41,21 +43,21 @@ class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
     });
   }
 
-void _fetchData() {
-  final playlistProvider = Provider.of<PlaylistProvider>(context, listen: false);
-  final likedTracksProvider = Provider.of<LikedProvider<Track>>(context, listen: false);
-  final likedAlbumsProvider = Provider.of<LikedProvider<Album>>(context, listen: false);
-  final likedArtistsProvider = Provider.of<LikedProvider<Artist>>(context, listen: false);
+  void _fetchData() {
+    final playlistProvider = Provider.of<PlaylistProvider>(context, listen: false);
+    final likedTracksProvider = Provider.of<LikedProvider<Track>>(context, listen: false);
+    final likedAlbumsProvider = Provider.of<LikedProvider<Album>>(context, listen: false);
+    final likedArtistsProvider = Provider.of<LikedProvider<Artist>>(context, listen: false);
 
-  try {
-    playlistProvider.fetchPlaylists();
-    likedTracksProvider.fetchLikedObjects();
-    likedAlbumsProvider.fetchLikedObjects();
-    likedArtistsProvider.fetchLikedObjects();
-  } catch (e) {
-    if (kDebugMode) print(e);
+    try {
+      playlistProvider.fetchPlaylists();
+      likedTracksProvider.fetchLikedObjects();
+      likedAlbumsProvider.fetchLikedObjects();
+      likedArtistsProvider.fetchLikedObjects();
+    } catch (e) {
+      if (kDebugMode) print(e);
+    }
   }
-}
 
   void _goToHome() {
     _navigatorKey.currentState?.popUntil((route) => route.isFirst);
@@ -98,10 +100,19 @@ void _fetchData() {
   }
 
   void _navigateToSearch(String query) {
+    final t = AppLocalizations.of(context)!;
+
     if (query.isEmpty) return;
-    if (_currentSearchQuery == query) {
+    
+    final modeProvider = Provider.of<ModeProvider>(context, listen: false);
+    if (modeProvider.isOfflineMode) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(t.searchOffline)),
+      );
       return;
     }
+    
+    if (_currentSearchQuery == query) return;
     _currentSearchQuery = query;
     _navigatorKey.currentState?.pushNamed('/search', arguments: query).then((_) {
       if (_currentSearchQuery == query) _currentSearchQuery = null;

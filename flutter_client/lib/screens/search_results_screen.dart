@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/domain/usecases/search_use_case.dart';
-import 'package:frontend/data/services/search_service.dart';
+import 'package:frontend/l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+import 'package:frontend/providers/search_provider.dart';
 import 'package:frontend/screens/artist_screen.dart';
 import 'package:frontend/screens/album_detail_screen.dart';
 import 'package:frontend/utils/responsive.dart';
 import 'package:frontend/widgets/album_grid_item.dart';
 import 'package:frontend/widgets/track_tile.dart';
-import 'package:frontend/models/track.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String query;
@@ -19,75 +19,66 @@ class SearchResultsScreen extends StatefulWidget {
 class _SearchResultsScreenState extends State<SearchResultsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  Map<String, dynamic> _results = {};
-  bool _isLoading = true;
-  String? _error;
-
-  late SearchUseCase _searchUseCase;
-
+  
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _searchUseCase = SearchUseCase(searchService: SearchService());
-    _performSearch();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final searchProvider = Provider.of<SearchProvider>(context, listen: false);
+      searchProvider.search(widget.query);
+    });
   }
 
-  Future<void> _performSearch() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-    try {
-      final results = await _searchUseCase.execute(widget.query);
-      setState(() {
-        _results = results;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+  @override
+  void didUpdateWidget(covariant SearchResultsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.query != widget.query) {
+      final searchProvider = Provider.of<SearchProvider>(context, listen: false);
+      searchProvider.search(widget.query);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Wyniki wyszukiwania: ${widget.query}'),
-        backgroundColor: Colors.black,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Artyści'),
-            Tab(text: 'Albumy'),
-            Tab(text: 'Utwory'),
-          ],
-        ),
-      ),
-      body: _buildBody(),
+    final t = AppLocalizations.of(context)!;
+
+    return Consumer<SearchProvider>(
+      builder: (context, searchProvider, child) {
+        final isLoading = searchProvider.isLoading;
+        final error = searchProvider.error;
+        final artists = searchProvider.artists;
+        final albums = searchProvider.albums;
+        final tracks = searchProvider.tracks;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('Wyniki wyszukiwania: ${widget.query}'),
+            backgroundColor: Colors.black,
+            bottom: TabBar(
+              controller: _tabController,
+              tabs: [
+                Tab(text: t.artists),
+                Tab(text: t.albums),
+                Tab(text: t.tracks),
+              ],
+            ),
+          ),
+          body: _buildBody(isLoading, error, artists, albums, tracks),
+        );
+      },
     );
   }
 
-  Widget _buildBody() {
-    if (_isLoading) {
+  Widget _buildBody(bool isLoading, String? error, List artists, List albums, List tracks) {
+    final t = AppLocalizations.of(context)!;
+
+    if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_error != null) {
-      return Center(child: Text('Błąd: $_error'));
+    if (error != null) {
+      return Center(child: Text(t.errorOccurred(error)));
     }
-
-    final artistsData = _results['artists'] as Map<String, dynamic>?;
-    final albumsData = _results['albums'] as Map<String, dynamic>?;
-    final tracksData = _results['tracks'] as Map<String, dynamic>?;
-
-    final artists = (artistsData?['data'] as List?) ?? [];
-    final albums = (albumsData?['data'] as List?) ?? [];
-    final tracks = (tracksData?['data'] as List?) ?? [];
 
     return TabBarView(
       controller: _tabController,
@@ -99,22 +90,21 @@ class _SearchResultsScreenState extends State<SearchResultsScreen>
     );
   }
 
-  Widget _buildArtistList(List<dynamic> artists) {
-    if (artists.isEmpty) return const Center(child: Text('Brak artystów'));
+  Widget _buildArtistList(List artists) {
+    final t = AppLocalizations.of(context)!;
+    if (artists.isEmpty) return Center(child: Text(t.emptyList));
     return ListView.builder(
       itemCount: artists.length,
       itemBuilder: (ctx, index) {
-        final item = artists[index];
-        final id = item is Map ? item['id'] : item.id;
-        final name = item is Map ? item['name'] : item.name;
+        final artist = artists[index];
         return ListTile(
           leading: const Icon(Icons.person),
-          title: Text(name ?? 'Nieznany artysta'),
+          title: Text(artist.name),
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ArtistScreen(artistId: id),
+                builder: (context) => ArtistScreen(artistId: artist.id),
               ),
             );
           },
@@ -123,8 +113,9 @@ class _SearchResultsScreenState extends State<SearchResultsScreen>
     );
   }
 
-  Widget _buildAlbumList(List<dynamic> albums) {
-    if (albums.isEmpty) return const Center(child: Text('Brak albumów'));
+  Widget _buildAlbumList(List albums) {
+    final t = AppLocalizations.of(context)!;
+    if (albums.isEmpty) return Center(child: Text(t.emptyList));
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = getCrossAxisCount(constraints.maxWidth);
@@ -154,17 +145,15 @@ class _SearchResultsScreenState extends State<SearchResultsScreen>
     );
   }
 
-  Widget _buildTrackList(List<dynamic> tracks) {
+  Widget _buildTrackList(List tracks) {
+    final t = AppLocalizations.of(context)!;
     if (tracks.isEmpty) {
-      return const Center(child: Text('Brak utworów'));
+      return Center(child: Text(t.emptyList));
     }
     return ListView.builder(
       itemCount: tracks.length,
       itemBuilder: (ctx, index) {
-        final item = tracks[index];
-        final track = item is Map
-            ? Track.fromJson(Map<String, dynamic>.from(item))
-            : item as Track;
+        final track = tracks[index];
         return TrackTile(track: track);
       },
     );
