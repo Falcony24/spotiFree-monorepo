@@ -12,7 +12,7 @@ class ArtistTracksProvider extends ChangeNotifier {
   bool _hasMore = true;
   int _offset = 0;
   String? _error;
-  bool _hasLoadedOnce = false;
+  String? _currentArtistId;
 
   List<Track> get tracks => _tracks;
   bool get isLoading => _isLoading;
@@ -29,8 +29,10 @@ class ArtistTracksProvider extends ChangeNotifier {
   void _onModeChanged() {}
 
   Future<void> loadInitial(String artistId) async {
-    if (_hasLoadedOnce) return;
-    _hasLoadedOnce = true;
+    if (_currentArtistId != null) {
+      await _loadTracks(_currentArtistId!, reset: true);
+    }
+    _currentArtistId = artistId;
     await _loadTracks(artistId, reset: true);
   }
 
@@ -69,7 +71,7 @@ class ArtistTracksProvider extends ChangeNotifier {
     _hasMore = true;
     _offset = 0;
     _error = null;
-    _hasLoadedOnce = false;
+    _currentArtistId = null;
     notifyListeners();
   }
 

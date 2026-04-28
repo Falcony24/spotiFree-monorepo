@@ -10,7 +10,7 @@ class ArtistDetailsProvider extends ChangeNotifier {
   Artist? _artist;
   bool _isLoading = false;
   String? _error;
-  bool _hasLoadedOnce = false;
+  String? _currentArtistId;
 
   Artist? get artist => _artist;
   bool get isLoading => _isLoading;
@@ -24,18 +24,20 @@ class ArtistDetailsProvider extends ChangeNotifier {
   }
 
   void _onModeChanged() {
-    if (_artist != null) {
-      fetchArtist(_artist!.id);
+    if (_currentArtistId  != null) {
+      fetchArtist(_currentArtistId!);
     }
   }
 
   Future<void> fetchArtist(String artistId) async {
-    if (_hasLoadedOnce) return;
-    _hasLoadedOnce = true;
+    if (_currentArtistId == artistId && _artist != null) return;
 
-    _isLoading = true;
+    _artist = null;
     _error = null;
+    _currentArtistId = artistId;
+    _isLoading = true;
     notifyListeners();
+
     try {
       _artist = await getArtistUseCase.execute(artistId);
     } catch (e) {
@@ -51,7 +53,7 @@ class ArtistDetailsProvider extends ChangeNotifier {
     _artist = null;
     _isLoading = false;
     _error = null;
-    _hasLoadedOnce = false;
+    _currentArtistId = null;
     notifyListeners();
   }
 

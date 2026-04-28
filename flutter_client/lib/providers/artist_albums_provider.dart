@@ -12,7 +12,7 @@ class ArtistAlbumsProvider extends ChangeNotifier {
   bool _hasMore = true;
   int _offset = 0;
   String? _error;
-  bool _hasLoadedOnce = false;
+  String? _currentArtistId;
 
   List<Album> get albums => _albums;
   bool get isLoading => _isLoading;
@@ -29,8 +29,9 @@ class ArtistAlbumsProvider extends ChangeNotifier {
   void _onModeChanged() {}
 
   Future<void> loadInitial(String artistId) async {
-    if (_hasLoadedOnce) return;
-    _hasLoadedOnce = true;
+    if (_currentArtistId != null) {
+      _loadAlbums(_currentArtistId!, reset: true);
+    }
     await _loadAlbums(artistId, reset: true);
   }
 
@@ -45,6 +46,7 @@ class ArtistAlbumsProvider extends ChangeNotifier {
       _offset = 0;
       _hasMore = true;
       _error = null;
+      _currentArtistId = artistId;
     }
     _isLoading = true;
     notifyListeners();
@@ -69,7 +71,7 @@ class ArtistAlbumsProvider extends ChangeNotifier {
     _hasMore = true;
     _offset = 0;
     _error = null;
-    _hasLoadedOnce = false;
+    _currentArtistId = null;
     notifyListeners();
   }
 
