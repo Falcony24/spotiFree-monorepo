@@ -159,14 +159,24 @@ class TrackTile extends StatelessWidget {
 
         return ListTile(
           leading: const Icon(Icons.music_note),
-          title: Text(track.title),
+          title: Text(
+            track.title,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
           subtitle: track.artist.isNotEmpty
-              ? Row(
+              ? Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     GestureDetector(
                       child: Text(
                         track.artist,
-                        style: const TextStyle(color: Colors.grey, decoration: TextDecoration.underline),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          decoration: TextDecoration.underline,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ),
                     if (track.duration != null) ...[

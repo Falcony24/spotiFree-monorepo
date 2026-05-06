@@ -42,7 +42,6 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
 
   Future<void> _downloadPlaylist(List<Track> tracks) async {
     final t = AppLocalizations.of(context)!;
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -70,7 +69,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
               title: Text(widget.playlist.name),
               backgroundColor: Colors.black,
               actions: [
-                if (likedTracks.isNotEmpty)
+                if (likedTracks.isNotEmpty) ...[
                   IconButton(
                     icon: const Icon(Icons.download),
                     onPressed: () => _downloadPlaylist(likedProvider.objects),
@@ -82,6 +81,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                       player.playTracks(likedTracks, startIndex: 0);
                     },
                   ),
+                ],
                 IconButton(
                   icon: const Icon(Icons.refresh),
                   onPressed: () => likedProvider.fetchLikedObjects(),
@@ -121,8 +121,8 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
             title: Text(widget.playlist.name),
             backgroundColor: Colors.black,
             actions: [
-              if (provider.tracks.isNotEmpty)
-                  IconButton(
+              if (provider.tracks.isNotEmpty) ...[
+                IconButton(
                   icon: const Icon(Icons.download),
                   onPressed: () => _downloadPlaylist(provider.tracks),
                 ),
@@ -133,6 +133,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                     player.playTracks(provider.tracks, startIndex: 0);
                   },
                 ),
+              ],
               IconButton(
                 icon: const Icon(Icons.refresh),
                 onPressed: _refresh,
@@ -140,7 +141,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
             ],
           ),
           body: RefreshIndicator(
-            onRefresh: () => _refresh(),
+            onRefresh: _refresh,
             child: _buildBody(provider),
           ),
         );
@@ -160,19 +161,28 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     if (provider.tracks.isEmpty) {
       return Center(child: Text(t.emptyList));
     }
-    return ListView.builder(
-      padding: const EdgeInsets.all(8),
-      itemCount: provider.tracks.length,
-      itemBuilder: (ctx, index) {
-        final track = provider.tracks[index];
-        return TrackTile(
-          track: track,
-          onPlay: () {
-            final player = Provider.of<PlayerProvider>(context, listen: false);
-            player.playTracks(provider.tracks, startIndex: index);
-          },
-        );
-      },
+
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(8),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (ctx, index) {
+                final track = provider.tracks[index];
+                return TrackTile(
+                  track: track,
+                  onPlay: () {
+                    final player = Provider.of<PlayerProvider>(context, listen: false);
+                    player.playTracks(provider.tracks, startIndex: index);
+                  },
+                );
+              },
+              childCount: provider.tracks.length,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

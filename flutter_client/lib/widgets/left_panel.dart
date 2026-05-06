@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/l10n/app_localizations.dart';
 import 'package:frontend/providers/mode_provider.dart';
+import 'package:frontend/providers/player_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/providers/playlist_provider.dart';
 import 'package:frontend/providers/liked_provider.dart'; 
@@ -92,6 +93,8 @@ class _LeftPanelState extends State<LeftPanel> {
               leading: const Icon(Icons.logout),
               title: Text(t.logout),
               onTap: () async {
+                final playerProvider = Provider.of<PlayerProvider>(context, listen: false);
+                await playerProvider.stop();        
                 await authProvider.logout();
               },
             ),
