@@ -1,13 +1,17 @@
+import 'package:audio_service/audio_service.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/data/repositories/track_repository.dart';
 import 'package:frontend/data/services/search_service.dart';
+
 import 'package:frontend/domain/factories/get_liked_use_case_factory.dart';
 import 'package:frontend/domain/factories/toggle_like_use_case_factory.dart';
 import 'package:frontend/domain/usecases/delete_downloaded_track_use_case.dart';
 import 'package:frontend/domain/usecases/download_track_use_case.dart';
 import 'package:frontend/domain/usecases/search_use_case.dart';
 import 'package:frontend/l10n/app_localizations.dart';
+import 'package:frontend/providers/audio_service_provider.dart';
 import 'package:frontend/providers/search_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
@@ -55,6 +59,7 @@ final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<Scaffol
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Desktop
   if (!kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.windows ||
           defaultTargetPlatform == TargetPlatform.linux ||
@@ -63,12 +68,32 @@ void main() async {
     databaseFactory = databaseFactoryFfi;
   }
 
-  runApp(MyApp());
+  final playerProvider = PlayerProvider();
+
+  // Mobile
+  if (!kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS)) {
+    final session = await AudioSession.instance;
+    await session.setActive(true);
+    await session.configure(AudioSessionConfiguration.music());
+    await AudioService.init(
+      builder: () => AudioServiceProvider(playerProvider: playerProvider),
+      config: const AudioServiceConfig(
+        androidNotificationChannelId: 'com.example.spotifree.audio',
+        androidNotificationChannelName: 'SpotiFree Audio',
+        androidNotificationOngoing: true,
+      ),
+    );
+  }
+
+  runApp(MyApp(playerProvider: playerProvider));
   _startSyncListener();
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final PlayerProvider playerProvider;
+  const MyApp({super.key, required this.playerProvider});
 
   @override
   Widget build(BuildContext context) {
@@ -234,11 +259,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
-        ChangeNotifierProxyProvider2<ModeProvider, DownloadedTracksProvider, PlayerProvider>(
-          create: (_) => PlayerProvider(),
-          update: (context, mode, downloaded, previous) =>
-              previous!..updateDependencies(mode, downloaded),
-        ),
+        ChangeNotifierProvider.value(value: playerProvider),
       ],
       child: MaterialApp(
         title: 'SpotiFree',
