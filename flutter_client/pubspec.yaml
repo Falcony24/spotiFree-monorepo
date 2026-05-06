@@ -30,7 +30,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+  flutter_localizations:
+    sdk: flutter
+    
+  intl: ^0.20.2
   http: ^1.1.0           # do zapytań HTTP
   shared_preferences: ^2.2.0   # do przechowywania tokenów
   provider: ^6.1.0       # do zarządzania stanem (opcjonalnie)
@@ -48,6 +51,10 @@ dependencies:
   internet_connection_checker: ^1.0.0+1
   synchronized: ^3.4.0
   flutter_secure_storage: ^9.2.2
+  web: ^1.1.1
+  just_audio: ^0.9.42
+  audio_service: ^0.18.13
+  audio_session: ^0.1.21
 
 dev_dependencies:
   flutter_test:
@@ -71,7 +78,7 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
+  generate: true
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
