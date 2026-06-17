@@ -1,9 +1,10 @@
 import './loadEnv.js';
 import express from 'express';
-import cors from'cors';
 import helmet from'helmet';
 import morgan from'morgan';
 import sequelize from './config/database.js';
+import rateLimit from 'express-rate-limit';
+import cors from 'cors';
 
 import authRoutes from'./routes/auth.js';
 import playlistRoutes from'./routes/playlists.js';
@@ -12,16 +13,25 @@ import trackRoutes from'./routes/tracks.js';
 import albumRoutes from './routes/albums.js';
 import favoriteRoutes from './routes/favorites.js';
 import artistRoutes from './routes/artist.js';
-import userRoutes from './routes/users.js'
+import userRoutes from './routes/users.js';
 
 import errorHandler from'./middlewares/errorHandler.js';
 
 const app = express();
 
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 100,                 
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+  
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(morgan('combined'));
+
+// app.use('/api', generalLimiter);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/playlists', playlistRoutes);
@@ -45,6 +55,6 @@ sequelize.authenticate()
   })
   .catch(err => {
     console.error('Unable to connect to database:', err);
-});
+  });
 
 export default app;

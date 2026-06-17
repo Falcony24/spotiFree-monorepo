@@ -12,7 +12,7 @@ const mutateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-router.use(mutateLimiter);
+// router.use(mutateLimiter);
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
