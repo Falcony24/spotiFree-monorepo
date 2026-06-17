@@ -3,3 +3,6 @@ dumps/
 init-db/
 
 .env
+flutter_client/lib/l10n/app_localizations.dart
+flutter_client/lib/l10n/app_localizations_en.dart
+flutter_client/lib/l10n/app_localizations_pl.dart
