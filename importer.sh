@@ -74,18 +74,6 @@ import_table "artist_tag"
 import_table "release_group_tag"
 import_table "recording_tag"
 
-# import_table "artist_gid_redirect"
-# import_table "release_group_gid_redirect"
-# import_table "release_gid_redirect"
-# import_table "recording_gid_redirect"
-# import_table "medium_gid_redirect"
-# import_table "track_gid_redirect"
-
-# if [ -d "/dumps/mbdump-derived" ]; then
-#   import_table "artist_rating_raw"
-#   import_table "release_group_rating_raw"
-#   import_table "recording_rating_raw"
-# fi
 
 psql -c "SET session_replication_role = DEFAULT;"
 
