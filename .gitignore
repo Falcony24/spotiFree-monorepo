@@ -1,6 +1,5 @@
 mbdump/
 dumps/
-init-db/
 
 .env
 flutter_client/lib/l10n/app_localizations.dart
