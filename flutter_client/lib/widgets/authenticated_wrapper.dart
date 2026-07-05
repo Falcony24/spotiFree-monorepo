@@ -2,8 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/l10n/app_localizations.dart';
 import 'package:frontend/models/track.dart';
+import 'package:frontend/providers/downloaded_tracks_provider.dart';
 import 'package:frontend/providers/liked_provider.dart';
 import 'package:frontend/providers/mode_provider.dart';
+import 'package:frontend/providers/player_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/models/album.dart';
 import 'package:frontend/models/artist.dart';
@@ -39,6 +41,12 @@ class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final playerProvider = context.read<PlayerProvider>();
+      final modeProvider = context.read<ModeProvider>();
+      final downloadedProvider = context.read<DownloadedTracksProvider>();
+
+      playerProvider.updateDependencies(modeProvider, downloadedProvider);
+
       _fetchData();
     });
   }
