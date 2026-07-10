@@ -14,6 +14,7 @@
   "searchHint": "Szukaj artystów, albumów, utworów...",
   "playlists": "Playlisty",
   "searchResults": "Wyniki wyszukiwania:",
+  "noResults": "Brak wyników",
   "artists": "Artyści",
   "albums": "Albumy",
   "tracks": "Utwory",
@@ -62,5 +63,9 @@
   "likedTracksDescription": "Twoje ulubione utwory",
   "errorOccurred": "Wystąpił błąd: {playlistName}",
   "emptyList": "Pusta lista",
-  "searchOffline": "Wyszukiwanie jest niedostępne w trybie offline. Wyłącz tryb offline, aby kontynuować."
+  "searchOffline": "Wyszukiwanie jest niedostępne w trybie offline. Wyłącz tryb offline, aby kontynuować.",
+  "library": "Biblioteka",
+  "home": "Home",
+  "search": "Szukaj",
+  "profile": "Profil"
 }

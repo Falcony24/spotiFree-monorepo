@@ -14,6 +14,7 @@
   "searchHint": "Search artists, albums, tracks...",
   "playlists": "Playlists",
   "searchResults": "Search results:",
+  "noResults": "No results",
   "artists": "Artists",
   "albums": "Albums",
   "tracks": "Tracks",
@@ -69,5 +70,9 @@
   "likedTracksDescription": "Your liked tracks",
   "errorOccurred": "Error occurred: {playlistName}",
   "emptyList": "Empty list",
-  "searchOffline": "Search is unavailable in offline mode. Disable offline mode to continue."
+  "searchOffline": "Search is unavailable in offline mode. Disable offline mode to continue.",
+  "library": "Library",
+  "home": "Home",
+  "search": "Search",
+  "profile": "Profile"
 }
