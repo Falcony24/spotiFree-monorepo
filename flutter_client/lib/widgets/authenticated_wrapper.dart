@@ -1,25 +1,18 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:spotifree/l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+import 'package:spotifree/models/album.dart';
+import 'package:spotifree/models/artist.dart';
 import 'package:spotifree/models/track.dart';
 import 'package:spotifree/providers/downloaded_tracks_provider.dart';
 import 'package:spotifree/providers/liked_provider.dart';
 import 'package:spotifree/providers/mode_provider.dart';
 import 'package:spotifree/providers/player_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:spotifree/models/album.dart';
-import 'package:spotifree/models/artist.dart';
-import 'package:spotifree/models/playlist.dart';
-
 import 'package:spotifree/providers/playlist_provider.dart';
-import 'package:spotifree/screens/album_detail_screen.dart';
-import 'package:spotifree/screens/artist_screen.dart';
 import 'package:spotifree/screens/home_screen.dart';
-import 'package:spotifree/screens/playlist_detail_screen.dart';
-import 'package:spotifree/screens/search_results_screen.dart';
-import 'package:spotifree/widgets/left_panel.dart';
+import 'package:spotifree/screens/library_screen.dart';
+import 'package:spotifree/screens/search_screen.dart';
+import 'package:spotifree/screens/profile_screen.dart';
 import 'package:spotifree/widgets/player_bar.dart';
-import 'package:spotifree/widgets/search_bar.dart';
 
 class AuthenticatedWrapper extends StatefulWidget {
   const AuthenticatedWrapper({super.key});
@@ -29,13 +22,7 @@ class AuthenticatedWrapper extends StatefulWidget {
 }
 
 class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();  
-  bool _isLeftPanelCollapsed = false;
-
-  String? _currentPlaylistId;
-  String? _currentAlbumId;
-  String? _currentArtistId;
-  String? _currentSearchQuery;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -46,7 +33,6 @@ class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
       final downloadedProvider = context.read<DownloadedTracksProvider>();
 
       playerProvider.updateDependencies(modeProvider, downloadedProvider);
-
       _fetchData();
     });
   }
@@ -63,74 +49,8 @@ class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
       likedAlbumsProvider.fetchLikedObjects();
       likedArtistsProvider.fetchLikedObjects();
     } catch (e) {
-      if (kDebugMode) print(e);
+      // if (kDebugMode) print(e);
     }
-  }
-
-  void _goToHome() {
-    _navigatorKey.currentState?.popUntil((route) => route.isFirst);
-
-    _currentPlaylistId = null;
-    _currentAlbumId = null;
-    _currentArtistId = null;
-    _currentSearchQuery = null;
-  }
-
-  void _navigateToPlaylist(Playlist playlist) {
-    final id = playlist.id;
-    if (_currentPlaylistId == id) return;
-    _currentPlaylistId = id;
-    _navigatorKey.currentState?.pushNamed('/playlist', arguments: playlist).then((_) {
-      if (_currentPlaylistId == id) _currentPlaylistId = null;
-    });
-  }
-
-  void _navigateToAlbum(Album album) {
-    final id = album.id;
-    if (_currentAlbumId == id) {
-      return;
-    }
-    _currentAlbumId = id;
-    _navigatorKey.currentState?.pushNamed('/album', arguments: album).then((_) {
-      if (_currentAlbumId == id) _currentAlbumId = null;
-    });
-  }
-
-  void _navigateToArtist(Artist artist) {
-    final id = artist.id;
-    if (_currentArtistId == id) {
-      return;
-    }
-    _currentArtistId = id;
-    _navigatorKey.currentState?.pushNamed('/artist', arguments: artist.id).then((_) {
-      if (_currentArtistId == id) _currentArtistId = null;
-    });
-  }
-
-  void _navigateToSearch(String query) {
-    final t = AppLocalizations.of(context)!;
-
-    if (query.isEmpty) return;
-    
-    final modeProvider = Provider.of<ModeProvider>(context, listen: false);
-    if (modeProvider.isOfflineMode) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(t.searchOffline)),
-      );
-      return;
-    }
-    
-    if (_currentSearchQuery == query) return;
-    _currentSearchQuery = query;
-    _navigatorKey.currentState?.pushNamed('/search', arguments: query).then((_) {
-      if (_currentSearchQuery == query) _currentSearchQuery = null;
-    });
-  }
-
-  void _toggleLeftPanel() {
-    setState(() {
-      _isLeftPanelCollapsed = !_isLeftPanelCollapsed;
-    });
   }
 
   @override
@@ -144,7 +64,7 @@ class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: _goToHome,
+                    onTap: () => setState(() => _selectedIndex = 0),
                     child: const Text(
                       'SpotiFree',
                       style: TextStyle(
@@ -155,72 +75,50 @@ class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
                     ),
                   ),
                   const Spacer(),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.25,
-                    child: SearchBarWidget(
-                      onSearch: _navigateToSearch,
-                    ),
-                  ),
-                  const Spacer(),
                 ],
               ),
             ),
           ),
           Expanded(
-            child: Row(
-              children: [
-                SizedBox(
-                  width: _isLeftPanelCollapsed ? 60 : 280,
-                  child: LeftPanel(
-                    onPlaylistSelected: _navigateToPlaylist,
-                    onAlbumSelected: _navigateToAlbum,
-                    onArtistSelected: _navigateToArtist,
-                    isCollapsed: _isLeftPanelCollapsed,
-                    onToggleCollapse: _toggleLeftPanel,
-                  ),
-                ),
-                Expanded(
-                  child: Navigator(
-                    key: _navigatorKey,
-                    initialRoute: '/',
-                    onGenerateRoute: (settings) {
-                      switch (settings.name) {
-                        case '/':
-                          return MaterialPageRoute(
-                            builder: (_) => const HomeScreen(),
-                          );
-                        case '/playlist':
-                          final playlist = settings.arguments as Playlist;
-                          return MaterialPageRoute(
-                            builder: (_) => PlaylistDetailScreen(playlist: playlist),
-                          );
-                        case '/album':
-                          final album = settings.arguments as Album;
-                          return MaterialPageRoute(
-                            builder: (_) => AlbumDetailScreen(album: album),
-                          );
-                        case '/artist':
-                          final artistId = settings.arguments as String;
-                          return MaterialPageRoute(
-                            builder: (_) => ArtistScreen(artistId: artistId),
-                          );
-                        case '/search':
-                          final query = settings.arguments as String;
-                          return MaterialPageRoute(
-                            builder: (_) => SearchResultsScreen(query: query),
-                          );
-                        default:
-                          return MaterialPageRoute(
-                            builder: (_) => const HomeScreen(),
-                          );
-                      }
-                    },
-                  ),
-                ),
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: const [
+                HomeScreen(),
+                LibraryScreen(),
+                SearchScreen(),
+                ProfileScreen(),
               ],
             ),
           ),
           const PlayerBar(),
+          BottomNavigationBar(
+            currentIndex: _selectedIndex,
+            onTap: (index) => setState(() => _selectedIndex = index),
+            backgroundColor: Colors.grey[900],
+            selectedItemColor: Colors.green,
+            unselectedItemColor: Colors.grey,
+            type: BottomNavigationBarType.fixed,
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.library_music),
+                label: 'Biblioteka',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.search),
+                label: 'Szukaj',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person),
+                label: 'Profil',
+              ),
+            ],
+          ),
         ],
       ),
     );

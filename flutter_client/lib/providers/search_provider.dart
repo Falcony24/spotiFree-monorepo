@@ -29,42 +29,44 @@ class SearchProvider extends ChangeNotifier {
   })  : _searchUseCase = searchUseCase,
         _modeProvider = modeProvider;
 
-  Future<void> search(String query, {String? type}) async {
-    if (query.isEmpty) {
-      _clearResults();
-      return;
-    }
-
-    if (_modeProvider.isOfflineMode) {
-      _isLoading = false;
-      _error = '';
-      _artists = [];
-      _albums = [];
-      _tracks = [];
-      notifyListeners();
-      return;
-    }
-
-    _lastQuery = query;
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final results = await _searchUseCase.execute(query, type: type);
-      _artists = results['artists']['data'] as List<Artist>;
-      _albums = results['albums']['data'] as List<Album>;
-      _tracks = results['tracks']['data'] as List<Track>;
-    } catch (e) {
-      _error = e.toString();
-      _artists = [];
-      _albums = [];
-      _tracks = [];
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+Future<void> search(String query, {String? type}) async {
+  if (query.isEmpty) {
+    _clearResults();
+    return;
   }
+
+  if (_modeProvider.isOfflineMode) {
+    _clearResults();
+    _error = 'Tryb offline – wyszukiwanie niedostępne';
+    notifyListeners();
+    return;
+  }
+
+  _lastQuery = query;
+  _isLoading = true;
+  _error = null;
+  notifyListeners();
+
+  try {
+    final results = await _searchUseCase.execute(query, type: type);
+
+    _artists = (results['artists']?['data'] as List?)?.cast<Artist>() ?? [];
+    _albums = (results['albums']?['data'] as List?)?.cast<Album>() ?? [];
+    _tracks = (results['tracks']?['data'] as List?)?.cast<Track>() ?? [];
+
+    if (_artists.isEmpty && _albums.isEmpty && _tracks.isEmpty) {
+      _error = 'Brak wyników';
+    }
+  } catch (e, stack) {
+    _error = 'Błąd wyszukiwania: $e';
+    _artists = [];
+    _albums = [];
+    _tracks = [];
+  } finally {
+    _isLoading = false;
+    notifyListeners();
+  }
+}
 
   void _clearResults() {
     _artists = [];

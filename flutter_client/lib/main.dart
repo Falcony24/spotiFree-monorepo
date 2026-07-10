@@ -11,10 +11,14 @@ import 'package:spotifree/domain/usecases/delete_downloaded_track_use_case.dart'
 import 'package:spotifree/domain/usecases/download_track_use_case.dart';
 import 'package:spotifree/domain/usecases/search_use_case.dart';
 import 'package:spotifree/l10n/app_localizations.dart';
+import 'package:spotifree/models/playlist.dart';
 import 'package:spotifree/providers/audio_service_provider.dart';
 import 'package:spotifree/providers/search_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:spotifree/screens/album_detail_screen.dart';
+import 'package:spotifree/screens/artist_screen.dart';
+import 'package:spotifree/screens/playlist_detail_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -289,6 +293,18 @@ class MyApp extends StatelessWidget {
             },
           ),
           '/register': (context) => const RegisterScreen(),
+          '/playlist': (context) {
+            final playlist = ModalRoute.of(context)!.settings.arguments as Playlist;
+            return PlaylistDetailScreen(playlist: playlist);
+          },
+          '/album': (context) {
+            final album = ModalRoute.of(context)!.settings.arguments as Album;
+            return AlbumDetailScreen(album: album);
+          },
+          '/artist': (context) {
+            final artistId = ModalRoute.of(context)!.settings.arguments as String;
+            return ArtistScreen(artistId: artistId);
+          },
         },
       ),
     );
