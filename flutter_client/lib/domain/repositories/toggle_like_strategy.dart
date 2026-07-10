@@ -1,4 +1,4 @@
-import 'package:frontend/domain/repositories/i_likeable_entity.dart';
+import 'package:spotifree/domain/repositories/i_likeable_entity.dart';
 
 typedef IsLikedCallback = Future<bool> Function(String id);
 typedef GetFavoriteIdCallback = Future<String?> Function(String id);

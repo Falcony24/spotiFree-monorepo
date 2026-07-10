@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/album.dart';
+import 'package:spotifree/models/album.dart';
 
 class AlbumGridItem extends StatelessWidget {
   final Album album;

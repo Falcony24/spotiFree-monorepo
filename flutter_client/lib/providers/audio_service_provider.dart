@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:audio_service/audio_service.dart';
-import 'package:frontend/providers/player_provider.dart';
+import 'package:spotifree/providers/player_provider.dart';
 
 class AudioServiceProvider extends BaseAudioHandler {
   final PlayerProvider _playerProvider;

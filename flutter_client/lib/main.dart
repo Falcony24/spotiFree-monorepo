@@ -2,57 +2,57 @@ import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/data/repositories/track_repository.dart';
-import 'package:frontend/data/services/search_service.dart';
+import 'package:spotifree/data/repositories/track_repository.dart';
+import 'package:spotifree/data/services/search_service.dart';
 
-import 'package:frontend/domain/factories/get_liked_use_case_factory.dart';
-import 'package:frontend/domain/factories/toggle_like_use_case_factory.dart';
-import 'package:frontend/domain/usecases/delete_downloaded_track_use_case.dart';
-import 'package:frontend/domain/usecases/download_track_use_case.dart';
-import 'package:frontend/domain/usecases/search_use_case.dart';
-import 'package:frontend/l10n/app_localizations.dart';
-import 'package:frontend/providers/audio_service_provider.dart';
-import 'package:frontend/providers/search_provider.dart';
+import 'package:spotifree/domain/factories/get_liked_use_case_factory.dart';
+import 'package:spotifree/domain/factories/toggle_like_use_case_factory.dart';
+import 'package:spotifree/domain/usecases/delete_downloaded_track_use_case.dart';
+import 'package:spotifree/domain/usecases/download_track_use_case.dart';
+import 'package:spotifree/domain/usecases/search_use_case.dart';
+import 'package:spotifree/l10n/app_localizations.dart';
+import 'package:spotifree/providers/audio_service_provider.dart';
+import 'package:spotifree/providers/search_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-import 'package:frontend/providers/auth_provider.dart';
-import 'package:frontend/providers/mode_provider.dart';
-import 'package:frontend/providers/playlist_provider.dart';
-import 'package:frontend/providers/playlist_tracks_provider.dart';
-import 'package:frontend/providers/downloaded_tracks_provider.dart';
-import 'package:frontend/providers/player_provider.dart';
-import 'package:frontend/providers/albums_provider.dart';
-import 'package:frontend/providers/artist_details_provider.dart';
-import 'package:frontend/providers/artist_albums_provider.dart';
-import 'package:frontend/providers/artist_tracks_provider.dart';
-import 'package:frontend/providers/liked_provider.dart';
+import 'package:spotifree/providers/auth_provider.dart';
+import 'package:spotifree/providers/mode_provider.dart';
+import 'package:spotifree/providers/playlist_provider.dart';
+import 'package:spotifree/providers/playlist_tracks_provider.dart';
+import 'package:spotifree/providers/downloaded_tracks_provider.dart';
+import 'package:spotifree/providers/player_provider.dart';
+import 'package:spotifree/providers/albums_provider.dart';
+import 'package:spotifree/providers/artist_details_provider.dart';
+import 'package:spotifree/providers/artist_albums_provider.dart';
+import 'package:spotifree/providers/artist_tracks_provider.dart';
+import 'package:spotifree/providers/liked_provider.dart';
 
-import 'package:frontend/domain/usecases/get_playlists_use_case.dart';
-import 'package:frontend/domain/usecases/manage_playlist_use_case.dart';
-import 'package:frontend/domain/usecases/get_playlist_tracks_use_case.dart';
-import 'package:frontend/domain/usecases/get_albums_use_case.dart';
-// import 'package:frontend/domain/usecases/get_album_tracks_use_case.dart';
-import 'package:frontend/domain/usecases/get_artist_use_case.dart';
-import 'package:frontend/domain/usecases/get_artist_albums_use_case.dart';
-import 'package:frontend/domain/usecases/get_artist_tracks_use_case.dart';
+import 'package:spotifree/domain/usecases/get_playlists_use_case.dart';
+import 'package:spotifree/domain/usecases/manage_playlist_use_case.dart';
+import 'package:spotifree/domain/usecases/get_playlist_tracks_use_case.dart';
+import 'package:spotifree/domain/usecases/get_albums_use_case.dart';
+// import 'package:spotifree/domain/usecases/get_album_tracks_use_case.dart';
+import 'package:spotifree/domain/usecases/get_artist_use_case.dart';
+import 'package:spotifree/domain/usecases/get_artist_albums_use_case.dart';
+import 'package:spotifree/domain/usecases/get_artist_tracks_use_case.dart';
 
-import 'package:frontend/data/repositories/favorites_repository.dart';
-import 'package:frontend/data/repositories/playlist_repository.dart';
-import 'package:frontend/data/repositories/album_repository.dart';
-import 'package:frontend/data/repositories/artist_repository.dart';
+import 'package:spotifree/data/repositories/favorites_repository.dart';
+import 'package:spotifree/data/repositories/playlist_repository.dart';
+import 'package:spotifree/data/repositories/album_repository.dart';
+import 'package:spotifree/data/repositories/artist_repository.dart';
 
-import 'package:frontend/models/track.dart';
-import 'package:frontend/models/album.dart';
-import 'package:frontend/models/artist.dart';
+import 'package:spotifree/models/track.dart';
+import 'package:spotifree/models/album.dart';
+import 'package:spotifree/models/artist.dart';
 
-import 'package:frontend/screens/login_screen.dart';
-import 'package:frontend/screens/register_screen.dart';
-import 'package:frontend/widgets/authenticated_wrapper.dart';
+import 'package:spotifree/screens/login_screen.dart';
+import 'package:spotifree/screens/register_screen.dart';
+import 'package:spotifree/widgets/authenticated_wrapper.dart';
 
-import 'package:frontend/data/services/sync_service.dart';
+import 'package:spotifree/data/services/sync_service.dart';
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/domain/usecases/get_albums_use_case.dart';
-import 'package:frontend/providers/mode_provider.dart';
-import 'package:frontend/models/album.dart';
+import 'package:spotifree/domain/usecases/get_albums_use_case.dart';
+import 'package:spotifree/providers/mode_provider.dart';
+import 'package:spotifree/models/album.dart';
 
 class AlbumsProvider extends ChangeNotifier {
   final GetAlbumsUseCase getAlbumsUseCase;

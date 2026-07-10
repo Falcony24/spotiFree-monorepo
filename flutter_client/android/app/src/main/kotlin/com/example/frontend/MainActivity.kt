@@ -1,4 +1,4 @@
-package com.example.frontend
+package com.example.spotifree
 
 import com.ryanheise.audioservice.AudioServiceActivity
 

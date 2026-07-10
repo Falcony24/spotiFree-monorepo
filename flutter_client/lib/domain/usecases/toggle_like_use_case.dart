@@ -1,9 +1,9 @@
-import 'package:frontend/data/services/offline_storage.dart';
-import 'package:frontend/domain/repositories/i_favorites_repository.dart';
-import 'package:frontend/domain/repositories/i_toggle_like_use_case.dart';
-import 'package:frontend/domain/repositories/toggle_like_strategy.dart';
-import 'package:frontend/domain/repositories/i_likeable_entity.dart';
-import 'package:frontend/providers/mode_provider.dart';
+import 'package:spotifree/data/services/offline_storage.dart';
+import 'package:spotifree/domain/repositories/i_favorites_repository.dart';
+import 'package:spotifree/domain/repositories/i_toggle_like_use_case.dart';
+import 'package:spotifree/domain/repositories/toggle_like_strategy.dart';
+import 'package:spotifree/domain/repositories/i_likeable_entity.dart';
+import 'package:spotifree/providers/mode_provider.dart';
 
 class ToggleLikeUseCase<T extends ILikeableEntity> implements IToggleLikeUseCase<T> {
   final IFavoritesRepository repository;

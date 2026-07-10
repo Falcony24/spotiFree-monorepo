@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/screens/catalog_screen.dart';
+import 'package:spotifree/screens/catalog_screen.dart';
 
 class Abc extends StatefulWidget {
   @override

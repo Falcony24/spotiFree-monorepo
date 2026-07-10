@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/l10n/app_localizations.dart';
+import 'package:spotifree/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/providers/player_provider.dart';
-import 'package:frontend/providers/liked_provider.dart';
-import 'package:frontend/models/track.dart';
+import 'package:spotifree/providers/player_provider.dart';
+import 'package:spotifree/providers/liked_provider.dart';
+import 'package:spotifree/models/track.dart';
 
 class PlayerBar extends StatelessWidget {
   const PlayerBar({super.key});

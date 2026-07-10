@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/l10n/app_localizations.dart';
-import 'package:frontend/widgets/album_grid_item.dart';
+import 'package:spotifree/l10n/app_localizations.dart';
+import 'package:spotifree/widgets/album_grid_item.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/providers/albums_provider.dart';
-import 'package:frontend/providers/mode_provider.dart';
-import 'package:frontend/screens/album_detail_screen.dart';
-import 'package:frontend/utils/responsive.dart';
+import 'package:spotifree/providers/albums_provider.dart';
+import 'package:spotifree/providers/mode_provider.dart';
+import 'package:spotifree/screens/album_detail_screen.dart';
+import 'package:spotifree/utils/responsive.dart';
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});

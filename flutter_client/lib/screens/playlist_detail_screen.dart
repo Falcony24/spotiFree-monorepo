@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/l10n/app_localizations.dart';
-import 'package:frontend/models/track.dart';
-import 'package:frontend/providers/liked_provider.dart';
-import 'package:frontend/widgets/download_progress_dialog.dart';
+import 'package:spotifree/l10n/app_localizations.dart';
+import 'package:spotifree/models/track.dart';
+import 'package:spotifree/providers/liked_provider.dart';
+import 'package:spotifree/widgets/download_progress_dialog.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/models/playlist.dart';
-import 'package:frontend/providers/playlist_tracks_provider.dart';
-import 'package:frontend/providers/player_provider.dart';
-import 'package:frontend/widgets/track_tile.dart';
+import 'package:spotifree/models/playlist.dart';
+import 'package:spotifree/providers/playlist_tracks_provider.dart';
+import 'package:spotifree/providers/player_provider.dart';
+import 'package:spotifree/widgets/track_tile.dart';
 
 class PlaylistDetailScreen extends StatefulWidget {
   final Playlist playlist;

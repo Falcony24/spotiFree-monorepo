@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/domain/usecases/search_use_case.dart';
-import 'package:frontend/models/artist.dart';
-import 'package:frontend/models/album.dart';
-import 'package:frontend/models/track.dart';
-import 'package:frontend/providers/mode_provider.dart';
+import 'package:spotifree/domain/usecases/search_use_case.dart';
+import 'package:spotifree/models/artist.dart';
+import 'package:spotifree/models/album.dart';
+import 'package:spotifree/models/track.dart';
+import 'package:spotifree/providers/mode_provider.dart';
 
 class SearchProvider extends ChangeNotifier {
   final SearchUseCase _searchUseCase;

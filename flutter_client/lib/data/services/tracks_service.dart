@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:frontend/data/services/authenticated_http_client.dart';
-import 'package:frontend/data/services/auth_service.dart';
+import 'package:spotifree/data/services/authenticated_http_client.dart';
+import 'package:spotifree/data/services/auth_service.dart';
 import 'package:http/http.dart' as http;
-import 'package:frontend/utils/constants.dart' as constants;
+import 'package:spotifree/utils/constants.dart' as constants;
 
 class PendingException implements Exception {
   final String message;

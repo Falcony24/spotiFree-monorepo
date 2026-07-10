@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/l10n/app_localizations.dart';
-import 'package:frontend/providers/downloaded_tracks_provider.dart';
-import 'package:frontend/models/track.dart';
+import 'package:spotifree/l10n/app_localizations.dart';
+import 'package:spotifree/providers/downloaded_tracks_provider.dart';
+import 'package:spotifree/models/track.dart';
 import 'package:provider/provider.dart';
 
 class DownloadProgressDialog extends StatefulWidget {
@@ -22,12 +22,21 @@ class _DownloadProgressDialogState extends State<DownloadProgressDialog> {
   int completed = 0;
   int total = 0;
   bool isDownloading = true;
+  bool _isDownloadStarted = false; 
 
   @override
   void initState() {
     super.initState();
     total = widget.tracks.length;
-    _startDownload();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isDownloadStarted) {
+      _isDownloadStarted = true;
+      _startDownload();
+    }
   }
 
   Future<void> _startDownload() async {

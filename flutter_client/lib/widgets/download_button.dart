@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/track.dart';
+import 'package:spotifree/models/track.dart';
 
 class DownloadButton extends StatefulWidget {
   final Track track;

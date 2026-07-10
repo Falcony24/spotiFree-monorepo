@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:frontend/data/repositories/track_repository.dart';
+import 'package:spotifree/data/repositories/track_repository.dart';
 
 class DeleteDownloadedTrackUseCase {
   final TrackRepository _repository;

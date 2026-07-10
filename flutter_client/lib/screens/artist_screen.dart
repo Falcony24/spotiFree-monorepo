@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/l10n/app_localizations.dart';
-import 'package:frontend/utils/responsive.dart';
-import 'package:frontend/widgets/album_grid_item.dart';
+import 'package:spotifree/l10n/app_localizations.dart';
+import 'package:spotifree/utils/responsive.dart';
+import 'package:spotifree/widgets/album_grid_item.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/models/artist.dart';
-import 'package:frontend/providers/artist_details_provider.dart';
-import 'package:frontend/providers/artist_albums_provider.dart';
-import 'package:frontend/providers/artist_tracks_provider.dart';
-import 'package:frontend/widgets/track_tile.dart';
-import 'package:frontend/screens/album_detail_screen.dart';
+import 'package:spotifree/models/artist.dart';
+import 'package:spotifree/providers/artist_details_provider.dart';
+import 'package:spotifree/providers/artist_albums_provider.dart';
+import 'package:spotifree/providers/artist_tracks_provider.dart';
+import 'package:spotifree/widgets/track_tile.dart';
+import 'package:spotifree/screens/album_detail_screen.dart';
 
 class ArtistScreen extends StatefulWidget {
   final Artist? artist;

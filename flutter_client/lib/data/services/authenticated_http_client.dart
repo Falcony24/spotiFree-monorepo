@@ -1,4 +1,4 @@
-import 'package:frontend/data/services/auth_service.dart';
+import 'package:spotifree/data/services/auth_service.dart';
 import 'package:http/http.dart' as http;
 
 class UnauthorizedException implements Exception {

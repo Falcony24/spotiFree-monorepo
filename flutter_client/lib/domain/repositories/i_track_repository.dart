@@ -1,4 +1,4 @@
-import 'package:frontend/models/track.dart';
+import 'package:spotifree/models/track.dart';
 
 abstract class ITrackRepository {
   Future<String> getStreamUrl(String trackId);

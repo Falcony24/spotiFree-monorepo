@@ -1,12 +1,12 @@
-import 'package:frontend/utils/constants.dart';
-import 'package:frontend/domain/repositories/i_favorites_repository.dart';
-import 'package:frontend/domain/repositories/get_liked_strategy.dart';
-import 'package:frontend/domain/usecases/get_liked_use_case.dart';
-import 'package:frontend/models/album.dart';
-import 'package:frontend/models/artist.dart';
-import 'package:frontend/domain/repositories/i_likeable_entity.dart';
-import 'package:frontend/models/track.dart';
-import 'package:frontend/providers/mode_provider.dart';
+import 'package:spotifree/utils/constants.dart';
+import 'package:spotifree/domain/repositories/i_favorites_repository.dart';
+import 'package:spotifree/domain/repositories/get_liked_strategy.dart';
+import 'package:spotifree/domain/usecases/get_liked_use_case.dart';
+import 'package:spotifree/models/album.dart';
+import 'package:spotifree/models/artist.dart';
+import 'package:spotifree/domain/repositories/i_likeable_entity.dart';
+import 'package:spotifree/models/track.dart';
+import 'package:spotifree/providers/mode_provider.dart';
 
 class GetLikedUseCaseFactory {
   static GetLikedUseCase<T> create<T extends ILikeableEntity>({

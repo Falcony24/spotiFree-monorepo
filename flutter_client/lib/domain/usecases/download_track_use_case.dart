@@ -1,5 +1,5 @@
-import 'package:frontend/data/repositories/track_repository.dart';
-import 'package:frontend/models/track.dart';
+import 'package:spotifree/data/repositories/track_repository.dart';
+import 'package:spotifree/models/track.dart';
 
 class DownloadTrackUseCase {
   final TrackRepository _repository;

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/l10n/app_localizations.dart';
+import 'package:spotifree/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/providers/search_provider.dart';
-import 'package:frontend/screens/artist_screen.dart';
-import 'package:frontend/screens/album_detail_screen.dart';
-import 'package:frontend/utils/responsive.dart';
-import 'package:frontend/widgets/album_grid_item.dart';
-import 'package:frontend/widgets/track_tile.dart';
+import 'package:spotifree/providers/search_provider.dart';
+import 'package:spotifree/screens/artist_screen.dart';
+import 'package:spotifree/screens/album_detail_screen.dart';
+import 'package:spotifree/utils/responsive.dart';
+import 'package:spotifree/widgets/album_grid_item.dart';
+import 'package:spotifree/widgets/track_tile.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String query;

@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:frontend/data/services/offline_storage.dart';
-import 'package:frontend/data/services/favorites_service.dart';
-import 'package:frontend/data/services/playlists_service.dart';
-import 'package:frontend/data/services/albums_service.dart';
+import 'package:spotifree/data/services/offline_storage.dart';
+import 'package:spotifree/data/services/favorites_service.dart';
+import 'package:spotifree/data/services/playlists_service.dart';
+import 'package:spotifree/data/services/albums_service.dart';
 
 class SyncService {
   final OfflineStorage _storage;

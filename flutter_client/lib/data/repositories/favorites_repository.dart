@@ -1,8 +1,8 @@
-import 'package:frontend/utils/constants.dart';
-import 'package:frontend/data/services/offline_storage.dart';
-import 'package:frontend/data/services/favorites_service.dart';
-import 'package:frontend/domain/repositories/i_favorites_repository.dart';
-import 'package:frontend/models/track.dart';
+import 'package:spotifree/utils/constants.dart';
+import 'package:spotifree/data/services/offline_storage.dart';
+import 'package:spotifree/data/services/favorites_service.dart';
+import 'package:spotifree/domain/repositories/i_favorites_repository.dart';
+import 'package:spotifree/models/track.dart';
 
 class FavoritesRepository implements IFavoritesRepository {
   final FavoritesService _api;

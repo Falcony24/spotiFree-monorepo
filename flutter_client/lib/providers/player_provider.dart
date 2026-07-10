@@ -2,15 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:frontend/models/track.dart';
-import 'package:frontend/providers/downloaded_tracks_provider.dart';
-import 'package:frontend/providers/liked_provider.dart';
-import 'package:frontend/providers/mode_provider.dart';
-import 'package:frontend/data/services/player_service.dart';
-import 'package:frontend/main.dart';
+import 'package:spotifree/models/track.dart';
+import 'package:spotifree/providers/downloaded_tracks_provider.dart';
+import 'package:spotifree/providers/liked_provider.dart';
+import 'package:spotifree/providers/mode_provider.dart';
+import 'package:spotifree/data/services/player_service.dart';
+import 'package:spotifree/main.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:frontend/data/services/tracks_service.dart';
+import 'package:spotifree/data/services/tracks_service.dart';
 
 class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
   final PlayerService _playerService = PlayerService();

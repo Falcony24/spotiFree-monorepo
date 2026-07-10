@@ -1,5 +1,5 @@
-import 'package:frontend/models/track.dart';
-import 'package:frontend/utils/constants.dart';
+import 'package:spotifree/models/track.dart';
+import 'package:spotifree/utils/constants.dart';
 
 abstract class IFavoritesRepository {
   Future<List<Map<String, dynamic>>> getLikedTracks({required DataSource source, bool forceRefresh = false});

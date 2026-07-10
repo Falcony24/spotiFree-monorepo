@@ -1,9 +1,9 @@
-import 'package:frontend/data/services/offline_storage.dart';
-import 'package:frontend/domain/repositories/i_album_repository.dart';
-import 'package:frontend/data/services/albums_service.dart';
-import 'package:frontend/models/album.dart';
-import 'package:frontend/models/track.dart';
-import 'package:frontend/utils/constants.dart';
+import 'package:spotifree/data/services/offline_storage.dart';
+import 'package:spotifree/domain/repositories/i_album_repository.dart';
+import 'package:spotifree/data/services/albums_service.dart';
+import 'package:spotifree/models/album.dart';
+import 'package:spotifree/models/track.dart';
+import 'package:spotifree/utils/constants.dart';
 
 class AlbumRepository implements IAlbumRepository {
   final AlbumsService _api;

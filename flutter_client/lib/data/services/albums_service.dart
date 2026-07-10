@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:frontend/data/services/authenticated_http_client.dart';
-import 'package:frontend/models/track.dart';
-import 'package:frontend/utils/constants.dart' as constants;
+import 'package:spotifree/data/services/authenticated_http_client.dart';
+import 'package:spotifree/models/track.dart';
+import 'package:spotifree/utils/constants.dart' as constants;
 
 class AlbumsService {
   final AuthenticatedHttpClient _http;

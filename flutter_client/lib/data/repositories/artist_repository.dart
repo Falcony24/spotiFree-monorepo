@@ -1,10 +1,10 @@
-import 'package:frontend/data/services/offline_storage.dart';
-import 'package:frontend/domain/repositories/i_artist_repository.dart';
-import 'package:frontend/data/services/artists_service.dart';
-import 'package:frontend/models/artist.dart';
-import 'package:frontend/models/album.dart';
-import 'package:frontend/models/track.dart';
-import 'package:frontend/utils/constants.dart';
+import 'package:spotifree/data/services/offline_storage.dart';
+import 'package:spotifree/domain/repositories/i_artist_repository.dart';
+import 'package:spotifree/data/services/artists_service.dart';
+import 'package:spotifree/models/artist.dart';
+import 'package:spotifree/models/album.dart';
+import 'package:spotifree/models/track.dart';
+import 'package:spotifree/utils/constants.dart';
 
 class ArtistRepository implements IArtistRepository {
   final ArtistsService _api;

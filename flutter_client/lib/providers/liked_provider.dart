@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:frontend/domain/repositories/i_get_liked_use_case.dart';
-import 'package:frontend/domain/repositories/i_likeable_entity.dart';
-import 'package:frontend/domain/repositories/i_toggle_like_use_case.dart';
-import 'package:frontend/providers/mode_provider.dart';
+import 'package:spotifree/domain/repositories/i_get_liked_use_case.dart';
+import 'package:spotifree/domain/repositories/i_likeable_entity.dart';
+import 'package:spotifree/domain/repositories/i_toggle_like_use_case.dart';
+import 'package:spotifree/providers/mode_provider.dart';
 
 class LikedProvider<V extends ILikeableEntity> extends ChangeNotifier {
   final IGetLikedUseCase<V> getLikedUseCase;

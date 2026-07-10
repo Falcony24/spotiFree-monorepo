@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/domain/usecases/get_playlist_tracks_use_case.dart';
-import 'package:frontend/providers/mode_provider.dart';
-import 'package:frontend/models/track.dart';
+import 'package:spotifree/domain/usecases/get_playlist_tracks_use_case.dart';
+import 'package:spotifree/providers/mode_provider.dart';
+import 'package:spotifree/models/track.dart';
 
 class PlaylistTracksProvider extends ChangeNotifier {
   final GetPlaylistTracksUseCase getPlaylistTracksUseCase;

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/data/services/tracks_service.dart';
-import 'package:frontend/l10n/app_localizations.dart';
-import 'package:frontend/models/track.dart';
-import 'package:frontend/data/services/offline_storage.dart';
-import 'package:frontend/domain/usecases/download_track_use_case.dart';
-import 'package:frontend/domain/usecases/delete_downloaded_track_use_case.dart';
+import 'package:spotifree/data/services/tracks_service.dart';
+import 'package:spotifree/l10n/app_localizations.dart';
+import 'package:spotifree/models/track.dart';
+import 'package:spotifree/data/services/offline_storage.dart';
+import 'package:spotifree/domain/usecases/download_track_use_case.dart';
+import 'package:spotifree/domain/usecases/delete_downloaded_track_use_case.dart';
 
 class DownloadedTracksProvider extends ChangeNotifier {
   final OfflineStorage _storage = OfflineStorage();

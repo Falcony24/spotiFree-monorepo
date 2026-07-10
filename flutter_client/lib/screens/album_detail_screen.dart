@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/data/services/albums_service.dart';
-import 'package:frontend/l10n/app_localizations.dart';
-import 'package:frontend/models/track.dart';
-import 'package:frontend/providers/liked_provider.dart';
-import 'package:frontend/widgets/download_progress_dialog.dart';
+import 'package:spotifree/data/services/albums_service.dart';
+import 'package:spotifree/l10n/app_localizations.dart';
+import 'package:spotifree/models/track.dart';
+import 'package:spotifree/providers/liked_provider.dart';
+import 'package:spotifree/widgets/download_progress_dialog.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/models/album.dart';
-import 'package:frontend/widgets/track_tile.dart';
-import 'package:frontend/providers/album_detail_provider.dart';
-import 'package:frontend/providers/player_provider.dart';
-import 'package:frontend/providers/mode_provider.dart';
-import 'package:frontend/domain/usecases/get_album_tracks_use_case.dart';
-import 'package:frontend/data/repositories/album_repository.dart';
+import 'package:spotifree/models/album.dart';
+import 'package:spotifree/widgets/track_tile.dart';
+import 'package:spotifree/providers/album_detail_provider.dart';
+import 'package:spotifree/providers/player_provider.dart';
+import 'package:spotifree/providers/mode_provider.dart';
+import 'package:spotifree/domain/usecases/get_album_tracks_use_case.dart';
+import 'package:spotifree/data/repositories/album_repository.dart';
 
 class AlbumDetailScreen extends StatelessWidget {
   final Album? album;

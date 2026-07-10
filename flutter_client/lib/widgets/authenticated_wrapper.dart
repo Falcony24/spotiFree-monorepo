@@ -1,25 +1,25 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/l10n/app_localizations.dart';
-import 'package:frontend/models/track.dart';
-import 'package:frontend/providers/downloaded_tracks_provider.dart';
-import 'package:frontend/providers/liked_provider.dart';
-import 'package:frontend/providers/mode_provider.dart';
-import 'package:frontend/providers/player_provider.dart';
+import 'package:spotifree/l10n/app_localizations.dart';
+import 'package:spotifree/models/track.dart';
+import 'package:spotifree/providers/downloaded_tracks_provider.dart';
+import 'package:spotifree/providers/liked_provider.dart';
+import 'package:spotifree/providers/mode_provider.dart';
+import 'package:spotifree/providers/player_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/models/album.dart';
-import 'package:frontend/models/artist.dart';
-import 'package:frontend/models/playlist.dart';
+import 'package:spotifree/models/album.dart';
+import 'package:spotifree/models/artist.dart';
+import 'package:spotifree/models/playlist.dart';
 
-import 'package:frontend/providers/playlist_provider.dart';
-import 'package:frontend/screens/album_detail_screen.dart';
-import 'package:frontend/screens/artist_screen.dart';
-import 'package:frontend/screens/home_screen.dart';
-import 'package:frontend/screens/playlist_detail_screen.dart';
-import 'package:frontend/screens/search_results_screen.dart';
-import 'package:frontend/widgets/left_panel.dart';
-import 'package:frontend/widgets/player_bar.dart';
-import 'package:frontend/widgets/search_bar.dart';
+import 'package:spotifree/providers/playlist_provider.dart';
+import 'package:spotifree/screens/album_detail_screen.dart';
+import 'package:spotifree/screens/artist_screen.dart';
+import 'package:spotifree/screens/home_screen.dart';
+import 'package:spotifree/screens/playlist_detail_screen.dart';
+import 'package:spotifree/screens/search_results_screen.dart';
+import 'package:spotifree/widgets/left_panel.dart';
+import 'package:spotifree/widgets/player_bar.dart';
+import 'package:spotifree/widgets/search_bar.dart';
 
 class AuthenticatedWrapper extends StatefulWidget {
   const AuthenticatedWrapper({super.key});

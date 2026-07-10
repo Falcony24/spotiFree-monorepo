@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/domain/usecases/get_artist_use_case.dart';
-import 'package:frontend/providers/mode_provider.dart';
-import 'package:frontend/models/artist.dart';
+import 'package:spotifree/domain/usecases/get_artist_use_case.dart';
+import 'package:spotifree/providers/mode_provider.dart';
+import 'package:spotifree/models/artist.dart';
 
 class ArtistDetailsProvider extends ChangeNotifier {
   final GetArtistUseCase getArtistUseCase;

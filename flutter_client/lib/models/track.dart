@@ -1,4 +1,4 @@
-import 'package:frontend/domain/repositories/i_likeable_entity.dart';
+import 'package:spotifree/domain/repositories/i_likeable_entity.dart';
 
 class Track implements ILikeableEntity {
   @override

@@ -1,4 +1,4 @@
-import 'package:frontend/data/services/search_service.dart';
+import 'package:spotifree/data/services/search_service.dart';
 
 class SearchUseCase {
   final SearchService searchService;

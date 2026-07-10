@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:frontend/data/services/offline_storage.dart';
+import 'package:spotifree/data/services/offline_storage.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:frontend/domain/repositories/i_track_repository.dart';
-import 'package:frontend/data/services/tracks_service.dart';
-import 'package:frontend/models/track.dart';
+import 'package:spotifree/domain/repositories/i_track_repository.dart';
+import 'package:spotifree/data/services/tracks_service.dart';
+import 'package:spotifree/models/track.dart';
 
 class TrackRepository implements ITrackRepository {
   final TracksService _api;

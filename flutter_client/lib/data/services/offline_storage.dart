@@ -1,10 +1,10 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:synchronized/synchronized.dart';
-import 'package:frontend/models/track.dart';
-import 'package:frontend/models/playlist.dart';
-import 'package:frontend/models/album.dart';
-import 'package:frontend/models/artist.dart';
+import 'package:spotifree/models/track.dart';
+import 'package:spotifree/models/playlist.dart';
+import 'package:spotifree/models/album.dart';
+import 'package:spotifree/models/artist.dart';
 
 class OfflineStorage {
   static final OfflineStorage _instance = OfflineStorage._();

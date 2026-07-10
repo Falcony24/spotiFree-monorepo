@@ -1,6 +1,6 @@
-import 'package:frontend/domain/repositories/i_playlist_repository.dart';
-import 'package:frontend/models/playlist.dart';
-import 'package:frontend/providers/mode_provider.dart';
+import 'package:spotifree/domain/repositories/i_playlist_repository.dart';
+import 'package:spotifree/models/playlist.dart';
+import 'package:spotifree/providers/mode_provider.dart';
 
 class ManagePlaylistUseCase {
   final IPlaylistRepository repository;
