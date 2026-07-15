@@ -25,7 +25,7 @@ class AlbumDetailScreen extends StatelessWidget {
     final t = AppLocalizations.of(context)!;
 
     if (effectiveAlbumId == null) {
-      return const Scaffold(
+      return Scaffold(
         body: Center(child: Text(t.missingAlbumId)),
       );
     }

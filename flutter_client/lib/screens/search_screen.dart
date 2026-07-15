@@ -5,6 +5,7 @@ import 'package:spotifree/models/album.dart';
 import 'package:spotifree/models/artist.dart';
 import 'package:spotifree/models/track.dart';
 import 'package:spotifree/providers/search_provider.dart';
+import 'package:spotifree/providers/player_provider.dart';
 import 'package:spotifree/widgets/search_bar.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -143,6 +144,8 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
           title: Text(track.title),
           subtitle: Text(track.artist),
           onTap: () {
+            final player = Provider.of<PlayerProvider>(context, listen: false);
+            player.play(track);
           },
         );
       },

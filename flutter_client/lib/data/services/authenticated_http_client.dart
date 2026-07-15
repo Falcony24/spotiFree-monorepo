@@ -7,8 +7,12 @@ class UnauthorizedException implements Exception {
 }
 
 class AuthenticatedHttpClient {
-  final AuthService authService = AuthService();
-  final http.Client _client = http.Client();
+  final AuthService authService;
+  final http.Client _client;
+
+  AuthenticatedHttpClient({AuthService? authService, http.Client? client})
+      : authService = authService ?? AuthService(),
+        _client = client ?? http.Client();
 
   Future<http.Response> get(Uri url) async {
     return _request(() async => _client.get(url, headers: await _getHeaders()));

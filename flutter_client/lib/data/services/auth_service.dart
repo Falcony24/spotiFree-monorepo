@@ -107,4 +107,8 @@ class AuthService {
     }
     await clearTokens();
   }
+
+  void close() {
+    _httpClient.close();
+  }
 }
