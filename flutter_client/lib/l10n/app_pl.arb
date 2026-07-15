@@ -67,5 +67,6 @@
   "library": "Biblioteka",
   "home": "Home",
   "search": "Szukaj",
-  "profile": "Profil"
+  "profile": "Profil",
+  "missingAlbumId": "Brak ID albumu"
 }

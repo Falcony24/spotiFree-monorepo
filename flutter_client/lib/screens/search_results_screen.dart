@@ -53,7 +53,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen>
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('Wyniki wyszukiwania: ${widget.query}'),
+            title: Text("${t.searchResults} ${widget.query}"),
             backgroundColor: Colors.black,
             bottom: TabBar(
               controller: _tabController,

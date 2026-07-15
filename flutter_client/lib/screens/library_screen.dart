@@ -137,13 +137,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
                         Icon(Icons.delete, size: 18),
                         SizedBox(width: 8),
-                        Text('Usuń playlistę'),
+                        Text(t.deletePlaylist),
                       ],
                     ),
                   ),

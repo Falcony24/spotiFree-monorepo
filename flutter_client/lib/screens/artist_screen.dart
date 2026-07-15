@@ -57,7 +57,7 @@ class _ArtistScreenState extends State<ArtistScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          detailsProvider.isLoading ? 'Artysta' : (artist?.name ?? 'Artysta'),
+          detailsProvider.isLoading ? '...' : (artist?.name ?? '???'),
         ),
         backgroundColor: Colors.black,
       ),

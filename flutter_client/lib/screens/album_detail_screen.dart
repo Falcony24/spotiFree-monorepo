@@ -22,9 +22,11 @@ class AlbumDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveAlbumId = album?.id ?? albumId;
+    final t = AppLocalizations.of(context)!;
+
     if (effectiveAlbumId == null) {
       return const Scaffold(
-        body: Center(child: Text('Brak identyfikatora albumu')),
+        body: Center(child: Text(t.missingAlbumId)),
       );
     }
     return AlbumDetailScreenContent(album: album, albumId: effectiveAlbumId);
@@ -125,13 +127,15 @@ class _AlbumDetailScreenContentState extends State<AlbumDetailScreenContent> {
   
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+
     return ChangeNotifierProvider.value(
       value: _albumDetailProvider,
       child: Consumer<AlbumDetailProvider>(
         builder: (context, provider, child) {
           return Scaffold(
             appBar: AppBar(
-              title: Text(_albumTitle ?? 'Album'),
+              title: Text(_albumTitle ?? "???"),
               backgroundColor: Colors.black,
               actions: [
                 IconButton(

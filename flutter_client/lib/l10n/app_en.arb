@@ -74,5 +74,6 @@
   "library": "Library",
   "home": "Home",
   "search": "Search",
-  "profile": "Profile"
+  "profile": "Profile",
+  "missingAlbumId": "Album ID is missing"
 }
