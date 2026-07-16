@@ -43,20 +43,18 @@ class _AuthenticatedWrapperState extends State<AuthenticatedWrapper> {
     });
   }
 
-  void _fetchData() {
+  Future<void> _fetchData() async {
     final playlistProvider = Provider.of<PlaylistProvider>(context, listen: false);
     final likedTracksProvider = Provider.of<LikedProvider<Track>>(context, listen: false);
     final likedAlbumsProvider = Provider.of<LikedProvider<Album>>(context, listen: false);
     final likedArtistsProvider = Provider.of<LikedProvider<Artist>>(context, listen: false);
 
-    try {
-      playlistProvider.fetchPlaylists();
-      likedTracksProvider.fetchLikedObjects();
-      likedAlbumsProvider.fetchLikedObjects();
-      likedArtistsProvider.fetchLikedObjects();
-    } catch (e) {
-      // if (kDebugMode) print(e);
-    }
+    await Future.wait([
+      playlistProvider.fetchPlaylists().catchError((_) {}),
+      likedTracksProvider.fetchLikedObjects().catchError((_) {}),
+      likedAlbumsProvider.fetchLikedObjects().catchError((_) {}),
+      likedArtistsProvider.fetchLikedObjects().catchError((_) {}),
+    ]);
   }
 
 @override
