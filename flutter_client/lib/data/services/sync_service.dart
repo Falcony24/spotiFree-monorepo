@@ -90,17 +90,15 @@ class SyncService {
 
   Future<void> _pullRemoteData() async {
     try {
+      await _storage.stageForSync('liked_tracks');
+      await _storage.stageForSync('liked_albums');
+      await _storage.stageForSync('liked_artists');
+      await _storage.stageForSync('playlists');
+
       final likedTracks = await _favoritesService.getLikedTracks();
       final likedAlbums = await _favoritesService.getLikedAlbums();
       final likedArtists = await _favoritesService.getLikedArtists();
       final playlistsData = await _playlistsService.getPlaylists(limit: 1000);
-
-      final db = await _storage.database;
-      await db.delete('liked_tracks');
-      await db.delete('liked_albums');
-      await db.delete('liked_artists');
-      await db.delete('playlists');
-      await db.delete('playlist_tracks');
 
       for (final item in likedTracks) {
         await _storage.addLikedTrack(item['id'], item['entity']);
@@ -123,6 +121,11 @@ class SyncService {
         final detail = await _playlistsService.getPlaylistDetail(playlist.id);
         await _storage.savePlaylistTracks(playlist.id, detail['tracks']);
       }
+
+      await _storage.removeStaleAfterSync('liked_tracks', 'track_id');
+      await _storage.removeStaleAfterSync('liked_albums', 'album_id');
+      await _storage.removeStaleAfterSync('liked_artists', 'artist_id');
+      await _storage.removeStaleAfterSync('playlists', 'id');
     } catch (e) {
       debugPrint('Pull remote data failed: $e');
     }
