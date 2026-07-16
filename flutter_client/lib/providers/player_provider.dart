@@ -97,46 +97,55 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
 
     final lastTrackJson = _prefs?.getString('last_track');
     final lastPositionMs = _prefs?.getInt('last_position') ?? 0;
+    final lastQueueJson = _prefs?.getString('last_queue');
+
     if (lastTrackJson != null) {
       try {
         final savedTrack = Track.fromJson(jsonDecode(lastTrackJson));
         _currentTrack = savedTrack;
         _position = Duration(milliseconds: lastPositionMs);
         _duration = Duration(milliseconds: savedTrack.duration ?? 0);
-        _queue = [savedTrack];
-        _currentIndex = 0;
+
+        if (lastQueueJson != null) {
+          final List<dynamic> queueList = jsonDecode(lastQueueJson);
+          _queue = queueList
+              .map((j) => Track.fromJson(j as Map<String, dynamic>))
+              .toList();
+          _currentIndex = _queue.indexWhere((t) => t.id == savedTrack.id);
+          if (_currentIndex < 0) _currentIndex = 0;
+        } else {
+          _queue = [savedTrack];
+          _currentIndex = 0;
+        }
         notifyListeners();
 
-        _isRestoring = true;
-        await _preloadTrack(savedTrack, lastPositionMs);
-        _isRestoring = false;
+        if (_downloadedProvider != null &&
+            _downloadedProvider!.isDownloaded(savedTrack.id)) {
+          _isRestoring = true;
+          await _preloadTrack(savedTrack, lastPositionMs);
+          _isRestoring = false;
+        }
       } catch (e) {
         debugPrint('Failed to restore last track: $e');
+        _currentTrack = null;
+        _queue = [];
+        _currentIndex = -1;
+        _position = Duration.zero;
+        _duration = Duration.zero;
+        notifyListeners();
       }
     }
   }
 
   Future<void> _preloadTrack(Track track, int seekMs) async {
     try {
-      String source;
-      if (_modeProvider != null && _modeProvider!.isOfflineMode) {
-        if (_downloadedProvider == null || !_downloadedProvider!.isDownloaded(track.id)) {
-          return;
-        }
-        final localPath = _downloadedProvider!.getFilePath(track.id);
-        if (localPath == null) return;
-        source = Uri.file(localPath).toString();
-      } else {
-        String? localPath;
-        if (_downloadedProvider != null && _downloadedProvider!.isDownloaded(track.id)) {
-          localPath = _downloadedProvider!.getFilePath(track.id);
-        }
-        if (localPath != null) {
-          source = Uri.file(localPath).toString();
-        } else {
-          source = await TracksService().getPresignedStreamUrl(track.id);
-        }
+      String? localPath;
+      if (_downloadedProvider != null && _downloadedProvider!.isDownloaded(track.id)) {
+        localPath = _downloadedProvider!.getFilePath(track.id);
       }
+      if (localPath == null) return; 
+
+      final source = Uri.file(localPath).toString();
       await _playerService.setSourceAndSeek(source, Duration(milliseconds: seekMs));
     } catch (e) {
       debugPrint('Preload error: $e');
@@ -157,9 +166,17 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
     if (_currentTrack != null) {
       await _prefs!.setString('last_track', jsonEncode(_currentTrack!.toJson()));
       await _prefs!.setInt('last_position', _position.inMilliseconds);
+
+      if (_queue.isNotEmpty) {
+        await _prefs!.setString(
+          'last_queue',
+          jsonEncode(_queue.map((t) => t.toJson()).toList()),
+        );
+      }
     } else {
       await _prefs!.remove('last_track');
       await _prefs!.remove('last_position');
+      await _prefs!.remove('last_queue');
     }
   }
 
