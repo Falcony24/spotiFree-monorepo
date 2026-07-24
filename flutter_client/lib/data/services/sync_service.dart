@@ -5,11 +5,15 @@ import 'package:spotifree/data/services/favorites_service.dart';
 import 'package:spotifree/data/services/playlists_service.dart';
 import 'package:spotifree/data/services/albums_service.dart';
 
+typedef ModeProviderGetter = bool Function();
+
 class SyncService {
   final OfflineStorage _storage;
   final FavoritesService _favoritesService;
   final PlaylistsService _playlistsService;
   final AlbumsService _albumsService;
+
+  ModeProviderGetter? isOfflineMode;
 
   SyncService({
     OfflineStorage? storage,
@@ -22,6 +26,10 @@ class SyncService {
        _albumsService = albumsService ?? AlbumsService();
 
   Future<void> syncAll() async {
+    if (isOfflineMode != null && isOfflineMode!()) {
+      debugPrint('Sync skipped — offline mode is on');
+      return;
+    }
     await _pushLocalChanges();
     await _pullRemoteData();
   }

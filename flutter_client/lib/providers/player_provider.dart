@@ -233,6 +233,9 @@ class PlayerProvider extends ChangeNotifier with WidgetsBindingObserver {
         await _playerService.play(fileUri);
       } else {
         final streamUrl = await tracksService.getPresignedStreamUrl(track.id);
+        if (streamUrl.isEmpty) {
+          throw Exception('Received empty stream URL for track ${track.id}');
+        }
         await _playerService.play(streamUrl);
       }
       _isPlaying = true;

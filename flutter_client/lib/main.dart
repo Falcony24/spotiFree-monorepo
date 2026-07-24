@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
@@ -53,8 +55,12 @@ import 'package:spotifree/screens/register_screen.dart';
 import 'package:spotifree/widgets/authenticated_wrapper.dart';
 
 import 'package:spotifree/data/services/sync_service.dart';
+import 'package:spotifree/utils/app_theme.dart';
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
+StreamSubscription? _syncSubscription;
+final SyncService _sharedSyncService = SyncService();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,6 +75,9 @@ void main() async {
   }
 
   final playerProvider = PlayerProvider();
+  final modeProvider = ModeProvider();
+
+  _sharedSyncService.isOfflineMode = () => modeProvider.isOfflineMode;
 
   // Mobile
   if (!kIsWeb &&
@@ -87,17 +96,17 @@ void main() async {
     );
   }
 
-  runApp(MyApp(playerProvider: playerProvider));
+  runApp(MyApp(playerProvider: playerProvider, modeProvider: modeProvider));
   _startSyncListener();
 }
 
 class MyApp extends StatelessWidget {
   final PlayerProvider playerProvider;
-  const MyApp({super.key, required this.playerProvider});
+  final ModeProvider modeProvider;
+  const MyApp({super.key, required this.playerProvider, required this.modeProvider});
 
   @override
   Widget build(BuildContext context) {
-    final modeProvider = ModeProvider();
     final favoritesRepository = FavoritesRepository();
     final playlistRepository = PlaylistRepository();
     final albumRepository = AlbumRepository();
@@ -274,16 +283,36 @@ class MyApp extends StatelessWidget {
           Locale('en', 'US'),
         ],
         scaffoldMessengerKey: scaffoldMessengerKey,
-        theme: ThemeData.dark().copyWith(
-          primaryColor: Colors.blue,
-          scaffoldBackgroundColor: Colors.black,
-        ),
+        theme: AppTheme.darkTheme,
         initialRoute: '/',
         routes: {
           '/': (context) => Consumer<AuthProvider>(
             builder: (context, auth, child) {
               if (auth.isLoading) {
-                return const Scaffold(body: Center(child: CircularProgressIndicator()));
+                return const Scaffold(
+                  body: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 24),
+                        Text(
+                          'SpotiFree',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white70,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Loading...',
+                          style: TextStyle(fontSize: 13, color: Colors.white38),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
               }
               return auth.isAuthenticated ? const AuthenticatedWrapper() : const LoginScreen();
             },
@@ -296,10 +325,9 @@ class MyApp extends StatelessWidget {
 }
 
 void _startSyncListener() {
-  InternetConnectionChecker().onStatusChange.listen((status) async {
+  _syncSubscription = InternetConnectionChecker().onStatusChange.listen((status) async {
     if (status == InternetConnectionStatus.connected) {
-      final syncService = SyncService();
-      await syncService.syncAll();
+      await _sharedSyncService.syncAll();
     }
   });
 }

@@ -50,6 +50,9 @@ class PlayerService {
   }
 
   static Source _sourceFor(String url) {
+    if (url.isEmpty) {
+      throw ArgumentError('Cannot create audio source from empty URL');
+    }
     if (url.startsWith('/') || url.startsWith('file://')) {
       final path = url.startsWith('file://') ? Uri.parse(url).toFilePath() : url;
       return DeviceFileSource(path);
@@ -84,15 +87,20 @@ class PlayerService {
   }
 
   Future<void> setSource(String url) async {
+    if (url.isEmpty) return;
     await _audioPlayer.setSource(_sourceFor(url));
   }
 
   Future<void> setSourceAndSeek(String url, Duration position) async {
+    if (url.isEmpty) return;
     await _audioPlayer.setSource(_sourceFor(url));
     await _audioPlayer.seek(position);
   }
 
   Future<void> play(String url) async {
+    if (url.isEmpty) {
+      throw ArgumentError('Cannot play audio from empty URL');
+    }
     try {
       await _audioPlayer.play(_sourceFor(url));
     } catch (e) {

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
@@ -7,13 +6,13 @@ import 'package:internet_connection_checker/internet_connection_checker.dart';
 class ModeProvider extends ChangeNotifier {
   bool _isOfflineMode = false;
   bool _hasInternet = true;
+  bool _autoOffline = false;
   StreamSubscription? _connectionSubscription;
-  
+
   bool get isOfflineMode => _isOfflineMode;
   bool get hasInternet => _hasInternet;
 
-  final InternetConnectionChecker _connectionChecker =
-      InternetConnectionChecker();
+  final InternetConnectionChecker _connectionChecker = InternetConnectionChecker();
 
   ModeProvider() {
     _init();
@@ -28,6 +27,7 @@ class ModeProvider extends ChangeNotifier {
   Future<void> _loadMode() async {
     final prefs = await SharedPreferences.getInstance();
     _isOfflineMode = prefs.getBool('offline_mode') ?? false;
+    _autoOffline = false;
     notifyListeners();
   }
 
@@ -35,7 +35,7 @@ class ModeProvider extends ChangeNotifier {
     _hasInternet = await _connectionChecker.hasConnection;
     if (!_hasInternet && !_isOfflineMode) {
       _isOfflineMode = true;
-      await _saveMode();
+      _autoOffline = true;
     }
     notifyListeners();
   }
@@ -47,10 +47,12 @@ class ModeProvider extends ChangeNotifier {
 
       if (!_hasInternet && !_isOfflineMode) {
         _isOfflineMode = true;
-        _saveMode();
-        debugPrint('Brak internetu – przełączono w tryb offline');
-      } else if (_hasInternet && !previousInternet) {
-        debugPrint('Internet przywrócony – możesz wyłączyć tryb offline');
+        _autoOffline = true;
+        debugPrint('No internet — switched to offline mode');
+      } else if (_hasInternet && !previousInternet && _autoOffline) {
+        _isOfflineMode = false;
+        _autoOffline = false;
+        debugPrint('Internet restored — switched back to online mode');
       }
       notifyListeners();
     });
@@ -58,11 +60,13 @@ class ModeProvider extends ChangeNotifier {
 
   Future<void> setOfflineMode(bool value) async {
     if (!_hasInternet && !value) {
-      debugPrint('Nie można wyłączyć trybu offline – brak internetu');
+      debugPrint('Cannot disable offline mode — no internet');
       return;
     }
     if (_isOfflineMode == value) return;
+
     _isOfflineMode = value;
+    _autoOffline = false; 
     await _saveMode();
     notifyListeners();
   }
