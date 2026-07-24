@@ -12,19 +12,42 @@ class OfflineStorage {
   OfflineStorage._();
 
   Database? _db;
+  Future<Database>? _initFuture;
   final Lock _lock = Lock();
 
   Future<Database> get database async {
     if (_db != null) return _db!;
-    _db = await _initDB();
-    return _db!;
+
+    if (_initFuture != null) return _initFuture!;
+    _initFuture = _initDB().then((db) {
+      _db = db;
+      return db;
+    });
+    return _initFuture!;
   }
 
   Future<Database> _initDB() async {
     final path = join(await getDatabasesPath(), 'spotifree_offline.db');
     return await openDatabase(
       path,
-      version: 2,
+      version: 4,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 3) {
+          await db.execute('DROP TABLE IF EXISTS playlist_tracks');
+          await db.execute('''
+            CREATE TABLE playlist_tracks (
+              playlist_id TEXT,
+              track_id TEXT,
+              position INTEGER,
+              PRIMARY KEY (playlist_id, track_id)
+            )
+          ''');
+          await db.execute('CREATE INDEX IF NOT EXISTS idx_playlist_tracks_playlist_id ON playlist_tracks(playlist_id)');
+        }
+        if (oldVersion < 4) {
+          await db.execute('ALTER TABLE playlists ADD COLUMN synced INTEGER DEFAULT 1');
+        }
+      },
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE downloaded_tracks (
@@ -44,12 +67,13 @@ class OfflineStorage {
             is_public INTEGER NOT NULL,
             server_updated_at INTEGER,
             local_updated_at INTEGER,
-            deleted INTEGER DEFAULT 0
+            deleted INTEGER DEFAULT 0,
+            synced INTEGER DEFAULT 1
           )
         ''');
         await db.execute('''
           CREATE TABLE playlist_tracks (
-            playlist_id INTEGER,
+            playlist_id TEXT,
             track_id TEXT,
             position INTEGER,
             PRIMARY KEY (playlist_id, track_id)
@@ -488,6 +512,36 @@ class OfflineStorage {
       final db = await database;
       final res = await db.query('liked_artists', where: 'artist_id = ?', whereArgs: [artistId]);
       return res.isNotEmpty;
+    });
+  }
+
+  Future<void> stageForSync(String table) async {
+    await _lock.synchronized(() async {
+      final db = await database;
+      await db.update(table, {'synced': 0});
+    });
+  }
+
+  Future<void> removeStaleAfterSync(String table, String idColumn) async {
+    await _lock.synchronized(() async {
+      final db = await database;
+      const typeMap = <String, String>{
+        'liked_tracks': 'liked_track',
+        'liked_albums': 'liked_album',
+        'liked_artists': 'liked_artist',
+        'playlists': 'playlist',
+      };
+      final entityType = typeMap[table];
+      if (entityType == null) return;
+
+      await db.rawDelete('''
+        DELETE FROM $table
+        WHERE synced = 0
+          AND $idColumn NOT IN (
+            SELECT entity_id FROM sync_queue
+            WHERE entity_type = ? AND entity_id IS NOT NULL
+          )
+      ''', [entityType]);
     });
   }
 }
