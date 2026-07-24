@@ -11,7 +11,7 @@ import 'package:spotifree/widgets/track_tile.dart';
 
 class PlaylistDetailScreen extends StatefulWidget {
   final Playlist playlist;
-  
+
   const PlaylistDetailScreen({super.key, required this.playlist});
 
   @override
@@ -24,8 +24,10 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     super.initState();
     if (widget.playlist.id != 'liked_tracks') {
       Future.microtask(() {
-        Provider.of<PlaylistTracksProvider>(context, listen: false)
-            .loadTracks(widget.playlist.id);
+        if (mounted) {
+          Provider.of<PlaylistTracksProvider>(context, listen: false)
+              .loadTracks(widget.playlist.id);
+        }
       });
     }
   }
@@ -45,7 +47,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => DownloadProgressDialog(
+      builder: (_) => DownloadProgressDialog(
         tracks: tracks,
         onComplete: () {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -59,86 +61,61 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     if (widget.playlist.id == 'liked_tracks') {
       return Consumer<LikedProvider<Track>>(
         builder: (context, likedProvider, child) {
-          final likedTracks = likedProvider.objects; 
+          final likedTracks = likedProvider.objects;
           return Scaffold(
-            appBar: AppBar(
-              title: Text(widget.playlist.name),
-              backgroundColor: Colors.black,
-              actions: [
-                if (likedTracks.isNotEmpty) ...[
-                  IconButton(
-                    icon: const Icon(Icons.download),
-                    onPressed: () => _downloadPlaylist(likedProvider.objects),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.play_arrow),
-                    onPressed: () {
-                      final player = Provider.of<PlayerProvider>(context, listen: false);
-                      player.playTracks(likedTracks, startIndex: 0);
-                    },
-                  ),
-                ],
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: () => likedProvider.fetchLikedObjects(),
-                ),
-              ],
+            appBar: _buildAppBar(
+              title: widget.playlist.name,
+              hasTracks: likedTracks.isNotEmpty,
+              onDownload: () => _downloadPlaylist(likedProvider.objects),
+              onPlay: () {
+                Provider.of<PlayerProvider>(context, listen: false)
+                    .playTracks(likedTracks, startIndex: 0);
+              },
+              onRefresh: () => likedProvider.fetchLikedObjects(),
+              theme: theme,
             ),
             body: RefreshIndicator(
               onRefresh: () => likedProvider.fetchLikedObjects(),
               child: likedProvider.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : likedTracks.isEmpty
-                      ? Center(child: Text(t.emptyList))
+                      ? Center(
+                          child: Text(t.emptyList, style: theme.textTheme.bodyLarge))
                       : ListView.builder(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.fromLTRB(8, 8, 8, 100),
                           itemCount: likedTracks.length,
-                          itemBuilder: (ctx, index) {
-                            final track = likedTracks[index];
-                            return TrackTile(
-                              track: track,
-                              onPlay: () {
-                                final player = Provider.of<PlayerProvider>(context, listen: false);
-                                player.playTracks(likedTracks, startIndex: index);
-                              },
-                            );
-                          },
+                          itemBuilder: (_, index) => TrackTile(
+                            track: likedTracks[index],
+                            onPlay: () {
+                              Provider.of<PlayerProvider>(context, listen: false)
+                                  .playTracks(likedTracks, startIndex: index);
+                            },
+                          ),
                         ),
             ),
           );
         },
       );
     }
-    
+
     return Consumer<PlaylistTracksProvider>(
-      builder: (context, provider, child) {
+      builder: (context, provider, _) {
         return Scaffold(
-          appBar: AppBar(
-            title: Text(widget.playlist.name),
-            backgroundColor: Colors.black,
-            actions: [
-              if (provider.tracks.isNotEmpty) ...[
-                IconButton(
-                  icon: const Icon(Icons.download),
-                  onPressed: () => _downloadPlaylist(provider.tracks),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.play_arrow),
-                  onPressed: () {
-                    final player = Provider.of<PlayerProvider>(context, listen: false);
-                    player.playTracks(provider.tracks, startIndex: 0);
-                  },
-                ),
-              ],
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: _refresh,
-              ),
-            ],
+          appBar: _buildAppBar(
+            title: widget.playlist.name,
+            hasTracks: provider.tracks.isNotEmpty,
+            onDownload: () => _downloadPlaylist(provider.tracks),
+            onPlay: () {
+              Provider.of<PlayerProvider>(context, listen: false)
+                  .playTracks(provider.tracks, startIndex: 0);
+            },
+            onRefresh: _refresh,
+            theme: theme,
           ),
           body: RefreshIndicator(
             onRefresh: _refresh,
@@ -149,8 +126,29 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     );
   }
 
+  PreferredSizeWidget _buildAppBar({
+    required String title,
+    required bool hasTracks,
+    required VoidCallback onDownload,
+    required VoidCallback onPlay,
+    required VoidCallback onRefresh,
+    required ThemeData theme,
+  }) {
+    return AppBar(
+      title: Text(title),
+      actions: [
+        if (hasTracks) ...[
+          IconButton(icon: const Icon(Icons.download), onPressed: onDownload),
+          IconButton(icon: const Icon(Icons.play_arrow), onPressed: onPlay),
+        ],
+        IconButton(icon: const Icon(Icons.refresh), onPressed: onRefresh),
+      ],
+    );
+  }
+
   Widget _buildBody(PlaylistTracksProvider provider) {
     final t = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     if (provider.isLoading && provider.tracks.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -159,30 +157,19 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
       return Center(child: Text(t.errorOccurred(provider.error!)));
     }
     if (provider.tracks.isEmpty) {
-      return Center(child: Text(t.emptyList));
+      return Center(child: Text(t.emptyList, style: theme.textTheme.bodyLarge));
     }
 
-    return CustomScrollView(
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.all(8),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (ctx, index) {
-                final track = provider.tracks[index];
-                return TrackTile(
-                  track: track,
-                  onPlay: () {
-                    final player = Provider.of<PlayerProvider>(context, listen: false);
-                    player.playTracks(provider.tracks, startIndex: index);
-                  },
-                );
-              },
-              childCount: provider.tracks.length,
-            ),
-          ),
-        ),
-      ],
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 100),
+      itemCount: provider.tracks.length,
+      itemBuilder: (_, index) => TrackTile(
+        track: provider.tracks[index],
+        onPlay: () {
+          Provider.of<PlayerProvider>(context, listen: false)
+              .playTracks(provider.tracks, startIndex: index);
+        },
+      ),
     );
   }
 }

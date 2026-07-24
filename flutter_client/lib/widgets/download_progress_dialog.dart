@@ -46,18 +46,13 @@ class _DownloadProgressDialogState extends State<DownloadProgressDialog> {
     try {
       await downloadedProvider.downloadTracks(
         widget.tracks,
-        onProgress: (c, t) {
-          if (mounted) {
-            setState(() {
-              completed = c;
-              total = t;
-            });
-          }
+        onProgress: (c, totalCount) {
+          if (mounted) setState(() { completed = c; total = totalCount; });
         },
       );
       if (mounted) {
         setState(() => isDownloading = false);
-        await Future.delayed(const Duration(seconds: 1));
+        await Future.delayed(const Duration(milliseconds: 800));
         if (mounted) Navigator.pop(context);
         widget.onComplete();
       }
@@ -74,20 +69,27 @@ class _DownloadProgressDialogState extends State<DownloadProgressDialog> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final progress = total == 0 ? 0.0 : (completed / total).clamp(0.0, 1.0);
 
     return AlertDialog(
       title: Text(t.downloading),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          LinearProgressIndicator(value: total == 0 ? 0 : completed / total),
-          const SizedBox(height: 8),
-          Text(t.downloadedXOutOfY(completed, total)),
-          if (!isDownloading)
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: Icon(Icons.check_circle, color: Colors.green),
-            ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(value: progress, minHeight: 6),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            t.downloadedXOutOfY(completed, total),
+            style: theme.textTheme.bodyLarge,
+          ),
+          if (!isDownloading) ...[
+            const SizedBox(height: 12),
+            Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 32),
+          ],
         ],
       ),
     );

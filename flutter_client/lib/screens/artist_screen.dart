@@ -33,16 +33,9 @@ class _ArtistScreenState extends State<ArtistScreen> {
         Provider.of<ArtistDetailsProvider>(context, listen: false)
             .fetchArtist(_artistId);
       }
-      Provider.of<ArtistAlbumsProvider>(context, listen: false)
-          .loadInitial(_artistId);
-      Provider.of<ArtistTracksProvider>(context, listen: false)
-          .loadInitial(_artistId);
+      Provider.of<ArtistAlbumsProvider>(context, listen: false).loadInitial(_artistId);
+      Provider.of<ArtistTracksProvider>(context, listen: false).loadInitial(_artistId);
     });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -51,7 +44,8 @@ class _ArtistScreenState extends State<ArtistScreen> {
     final albumsProvider = Provider.of<ArtistAlbumsProvider>(context);
     final tracksProvider = Provider.of<ArtistTracksProvider>(context);
     final t = AppLocalizations.of(context)!;
-    
+    final theme = Theme.of(context);
+
     final artist = widget.artist ?? detailsProvider.artist;
 
     return Scaffold(
@@ -59,59 +53,84 @@ class _ArtistScreenState extends State<ArtistScreen> {
         title: Text(
           detailsProvider.isLoading ? '...' : (artist?.name ?? '???'),
         ),
-        backgroundColor: Colors.black,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Artist info card
             if (!detailsProvider.isLoading && artist != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 24),
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 24),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary.withAlpha(50),
+                      theme.colorScheme.surface,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      artist.name,
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      artist.sortName ?? '',
-                      style: const TextStyle(color: Colors.grey),
-                    ),
+                    Text(artist.name, style: theme.textTheme.headlineMedium),
+                    if (artist.sortName != null) ...[
+                      const SizedBox(height: 4),
+                      Text(artist.sortName!, style: theme.textTheme.bodyMedium),
+                    ],
                   ],
                 ),
               ),
-            Text(t.tracks , style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+
+            // Tracks section
+            _buildSectionHeader(t.tracks, Icons.music_note),
             if (tracksProvider.isLoading && tracksProvider.tracks.isEmpty)
-              const Center(child: CircularProgressIndicator())
+              const Center(child: Padding(
+                padding: EdgeInsets.all(24),
+                child: CircularProgressIndicator(),
+              ))
             else if (tracksProvider.tracks.isEmpty)
-              Text(t.noTracksFound)
-            else
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Text(t.noTracksFound, style: theme.textTheme.bodyMedium),
+              )
+            else ...[
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: tracksProvider.tracks.length,
-                itemBuilder: (ctx, i) => TrackTile(track: tracksProvider.tracks[i]),
+                itemBuilder: (_, i) => TrackTile(track: tracksProvider.tracks[i]),
               ),
-            if (!tracksProvider.isLoading && tracksProvider.hasMore)
-              Center(
-                child: TextButton(
-                  onPressed: () => tracksProvider.loadMore(_artistId),
-                  child: Text(t.loadMore),
+              if (tracksProvider.hasMore)
+                Center(
+                  child: TextButton(
+                    onPressed: () => tracksProvider.loadMore(_artistId),
+                    child: Text(t.loadMore),
+                  ),
                 ),
-              ),
-            const SizedBox(height: 24),
-            Text(t.albums, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+            ],
+
+            const SizedBox(height: 16),
+
+            // Albums section
+            _buildSectionHeader(t.albums, Icons.album),
             if (albumsProvider.isLoading && albumsProvider.albums.isEmpty)
-              const Center(child: CircularProgressIndicator())
+              const Center(child: Padding(
+                padding: EdgeInsets.all(24),
+                child: CircularProgressIndicator(),
+              ))
             else if (albumsProvider.albums.isEmpty)
-              Text(t.noAlbumsFound)
-            else
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Text(t.noAlbumsFound, style: theme.textTheme.bodyMedium),
+              )
+            else ...[
               LayoutBuilder(
                 builder: (context, constraints) {
                   final crossAxisCount = getCrossAxisCount(constraints.maxWidth);
@@ -120,12 +139,12 @@ class _ArtistScreenState extends State<ArtistScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
-                      childAspectRatio: 0.8,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
+                      childAspectRatio: 0.78,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
                     ),
                     itemCount: albumsProvider.albums.length,
-                    itemBuilder: (ctx, i) {
+                    itemBuilder: (_, i) {
                       final album = albumsProvider.albums[i];
                       return AlbumGridItem(
                         album: album,
@@ -133,7 +152,7 @@ class _ArtistScreenState extends State<ArtistScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => AlbumDetailScreen(album: album),
+                              builder: (_) => AlbumDetailScreen(album: album),
                             ),
                           );
                         },
@@ -142,15 +161,30 @@ class _ArtistScreenState extends State<ArtistScreen> {
                   );
                 },
               ),
-            if (!albumsProvider.isLoading && albumsProvider.hasMore)
-              Center(
-                child: TextButton(
-                  onPressed: () => albumsProvider.loadMore(_artistId),
-                  child: Text(t.loadMore),
+              if (albumsProvider.hasMore)
+                Center(
+                  child: TextButton(
+                    onPressed: () => albumsProvider.loadMore(_artistId),
+                    child: Text(t.loadMore),
+                  ),
                 ),
-              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: theme.colorScheme.primary),
+          const SizedBox(width: 8),
+          Text(title, style: theme.textTheme.titleLarge),
+        ],
       ),
     );
   }

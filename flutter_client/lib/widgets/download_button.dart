@@ -25,18 +25,37 @@ class _DownloadButtonState extends State<DownloadButton> {
   @override
   Widget build(BuildContext context) {
     if (_isDownloading) {
-      return const SizedBox(
-        width: 24,
-        height: 24,
-        child: CircularProgressIndicator(strokeWidth: 2),
+      return const Padding(
+        padding: EdgeInsets.all(8.0),
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
       );
     }
+
     return IconButton(
       icon: Icon(
         widget.isDownloaded ? Icons.check_circle : Icons.download,
-        color: widget.isDownloaded ? Colors.green : Colors.white,
+        size: 20,
+        color: widget.isDownloaded
+            ? Theme.of(context).colorScheme.primary
+            : Colors.white54,
       ),
-      onPressed: widget.isDownloaded ? widget.onDelete : widget.onDownload,
+      visualDensity: VisualDensity.compact,
+      onPressed: () async {
+        if (widget.isDownloaded) {
+          widget.onDelete();
+        } else {
+          setState(() => _isDownloading = true);
+          try {
+            widget.onDownload();
+          } finally {
+            if (mounted) setState(() => _isDownloading = false);
+          }
+        }
+      },
     );
   }
 }

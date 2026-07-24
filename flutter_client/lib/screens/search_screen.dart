@@ -5,8 +5,8 @@ import 'package:spotifree/models/album.dart';
 import 'package:spotifree/models/artist.dart';
 import 'package:spotifree/models/track.dart';
 import 'package:spotifree/providers/search_provider.dart';
-import 'package:spotifree/providers/player_provider.dart';
 import 'package:spotifree/widgets/search_bar.dart';
+import 'package:spotifree/widgets/track_tile.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -17,17 +17,11 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      setState(() {
-        _selectedIndex = _tabController.index;
-      });
-    });
   }
 
   @override
@@ -41,14 +35,10 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
     final searchProvider = Provider.of<SearchProvider>(context);
     final t = AppLocalizations.of(context)!;
 
-    final artistCount = searchProvider.artists.length;
-    final albumCount = searchProvider.albums.length;
-    final trackCount = searchProvider.tracks.length;
-
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
           child: SearchBarWidget(
             onSearch: (query) => searchProvider.search(query),
           ),
@@ -58,26 +48,26 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
         else if (searchProvider.error != null && searchProvider.error!.isNotEmpty)
           Expanded(child: Center(child: Text(searchProvider.error!)))
         else if (searchProvider.lastQuery == null || searchProvider.lastQuery!.isEmpty)
-          Expanded(child: Center(child: Text(t.searchHint)))
-        else if (artistCount == 0 && albumCount == 0 && trackCount == 0)
+          Expanded(
+            child: Center(
+              child: Text(t.searchHint, style: Theme.of(context).textTheme.bodyLarge),
+            ),
+          )
+        else if (searchProvider.artists.isEmpty &&
+            searchProvider.albums.isEmpty &&
+            searchProvider.tracks.isEmpty)
           Expanded(child: Center(child: Text(t.noResults)))
         else
           Expanded(
             child: Column(
               children: [
-                Container(
-                  color: Colors.grey[900],
-                  child: TabBar(
-                    controller: _tabController,
-                    indicatorColor: Colors.green,
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.grey,
-                    tabs: [
-                      Tab(text: '${t.artists} ($artistCount)'),
-                      Tab(text: '${t.albums} ($albumCount)'),
-                      Tab(text: '${t.tracks} ($trackCount)'),
-                    ],
-                  ),
+                TabBar(
+                  controller: _tabController,
+                  tabs: [
+                    Tab(text: '${t.artists} (${searchProvider.artists.length})'),
+                    Tab(text: '${t.albums} (${searchProvider.albums.length})'),
+                    Tab(text: '${t.tracks} (${searchProvider.tracks.length})'),
+                  ],
                 ),
                 Expanded(
                   child: TabBarView(
@@ -97,15 +87,18 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
   }
 
   Widget _buildArtistList(List<Artist> artists, AppLocalizations t) {
-    if (artists.isEmpty) {
-      return Center(child: Text(t.noArtistsFound));
-    }
+    if (artists.isEmpty) return Center(child: Text(t.noArtistsFound));
     return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 100),
       itemCount: artists.length,
       itemBuilder: (ctx, i) {
         final artist = artists[i];
         return ListTile(
-          leading: const Icon(Icons.person),
+          leading: CircleAvatar(
+            radius: 18,
+            backgroundColor: Colors.purpleAccent.withAlpha(40),
+            child: const Icon(Icons.person, size: 20, color: Colors.purpleAccent),
+          ),
           title: Text(artist.name),
           onTap: () => Navigator.pushNamed(context, '/artist', arguments: artist.id),
         );
@@ -114,15 +107,18 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
   }
 
   Widget _buildAlbumList(List<Album> albums, AppLocalizations t) {
-    if (albums.isEmpty) {
-      return Center(child: Text(t.noAlbumsFound));
-    }
+    if (albums.isEmpty) return Center(child: Text(t.noAlbumsFound));
     return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 100),
       itemCount: albums.length,
       itemBuilder: (ctx, i) {
         final album = albums[i];
         return ListTile(
-          leading: const Icon(Icons.album),
+          leading: CircleAvatar(
+            radius: 18,
+            backgroundColor: Colors.orangeAccent.withAlpha(40),
+            child: const Icon(Icons.album, size: 20, color: Colors.orangeAccent),
+          ),
           title: Text(album.title),
           subtitle: album.artist != null ? Text(album.artist!) : null,
           onTap: () => Navigator.pushNamed(context, '/album', arguments: album),
@@ -132,22 +128,12 @@ class _SearchScreenState extends State<SearchScreen> with SingleTickerProviderSt
   }
 
   Widget _buildTrackList(List<Track> tracks, AppLocalizations t) {
-    if (tracks.isEmpty) {
-      return Center(child: Text(t.noTracksFound));
-    }
+    if (tracks.isEmpty) return Center(child: Text(t.noTracksFound));
     return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 100),
       itemCount: tracks.length,
       itemBuilder: (ctx, i) {
-        final track = tracks[i];
-        return ListTile(
-          leading: const Icon(Icons.music_note),
-          title: Text(track.title),
-          subtitle: Text(track.artist),
-          onTap: () {
-            final player = Provider.of<PlayerProvider>(context, listen: false);
-            player.play(track);
-          },
-        );
+        return TrackTile(track: tracks[i]);
       },
     );
   }

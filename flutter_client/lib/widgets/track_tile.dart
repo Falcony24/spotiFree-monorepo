@@ -29,10 +29,11 @@ class TrackTile extends StatelessWidget {
           child: ListView.builder(
             shrinkWrap: true,
             itemCount: playlists.length,
-            itemBuilder: (ctx, index) {
+            itemBuilder: (_, index) {
               final playlist = playlists[index];
               return ListTile(
-                title: Text(playlist.name),
+                leading: const Icon(Icons.playlist_play, size: 22),
+                title: Text(playlist.name, maxLines: 1, overflow: TextOverflow.ellipsis),
                 onTap: () async {
                   Navigator.pop(ctx);
                   try {
@@ -45,7 +46,7 @@ class TrackTile extends StatelessWidget {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${t.downloadError} $e')),
+                        SnackBar(content: Text(t.downloadError(e.toString()))),
                       );
                     }
                   }
@@ -68,7 +69,7 @@ class TrackTile extends StatelessWidget {
   }
 
   Future<void> _showCreatePlaylistDialog(BuildContext context) async {
-    final TextEditingController nameController = TextEditingController();
+    final nameController = TextEditingController();
     final playlistProvider = Provider.of<PlaylistProvider>(context, listen: false);
     final t = AppLocalizations.of(context)!;
 
@@ -79,12 +80,10 @@ class TrackTile extends StatelessWidget {
         content: TextField(
           controller: nameController,
           decoration: InputDecoration(hintText: t.playlistNameHint),
+          autofocus: true,
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(t.cancel),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t.cancel)),
           TextButton(
             onPressed: () async {
               final name = nameController.text.trim();
@@ -104,7 +103,7 @@ class TrackTile extends StatelessWidget {
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${t.downloadError} $e')),
+                      SnackBar(content: Text(t.downloadError(e.toString()))),
                     );
                   }
                 }
@@ -127,9 +126,8 @@ class TrackTile extends StatelessWidget {
     final hours = duration.inHours;
     if (hours > 0) {
       return '${hours.toString()}:${(duration.inMinutes % 60).toString().padLeft(2, '0')}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
-    } else {
-      return '${(duration.inMinutes % 60).toString().padLeft(2, '0')}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
     }
+    return '${(duration.inMinutes % 60).toString().padLeft(2, '0')}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
   }
 
   @override
@@ -139,175 +137,202 @@ class TrackTile extends StatelessWidget {
     final downloadedProvider = Provider.of<DownloadedTracksProvider>(context);
     final isDownloaded = downloadedProvider.isDownloaded(track.id);
     final t = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        bool showLikeInline = false;
-        bool showDownloadInline = false;
+        final showInlineLike = width > 600;
+        final showInlineDownload = width > 600 && !kIsWeb;
 
-        if (width > 600) {
-          showLikeInline = true;
-          showDownloadInline = !kIsWeb;
-        } else if (width > 450) {
-          showLikeInline = true;
-          showDownloadInline = false;
-        } else {
-          showLikeInline = false;
-          showDownloadInline = false;
-        }
-
-        return ListTile(
-          leading: const Icon(Icons.music_note),
-          title: Text(
-            track.title,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-          subtitle: track.artist.isNotEmpty
-              ? Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    GestureDetector(
-                      child: Text(
-                        track.artist,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          decoration: TextDecoration.underline,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () {
+              if (onPlay != null) {
+                onPlay!();
+              } else {
+                Provider.of<PlayerProvider>(context, listen: false).play(track);
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              child: Row(
+                children: [
+                  // Track number / play icon
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    if (track.duration != null) ...[
-                      const SizedBox(width: 8),
-                      Text(
-                        _formatDuration(Duration(milliseconds: track.duration!)),
-                        style: const TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                    ],
-                  ],
-                )
-              : (track.duration != null
-                  ? Text(
-                      _formatDuration(Duration(seconds: track.duration!)),
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
-                    )
-                  : null),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (showLikeInline)
-                IconButton(
-                  icon: Icon(
-                    isLiked ? Icons.favorite : Icons.favorite_border,
-                    color: isLiked ? Colors.green : Colors.white,
+                    child: const Icon(Icons.music_note, size: 20, color: Colors.white54),
                   ),
-                  onPressed: () => likedProvider.toggleLike(track),
-                ),
-              if (showDownloadInline)
-                DownloadButton(
-                  track: track,
-                  isDownloaded: isDownloaded,
-                  onDownload: () async {
-                    try {
-                      await downloadedProvider.downloadTrack(track);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${t.download} ${track.title}')),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(t.downloadError(e.toString()))),
-                        );
-                      }
-                    }
-                  },
-                  onDelete: () async {
-                    await downloadedProvider.deleteTrack(track);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${t.deleteDownloaded} ${track.title}')),
-                      );
-                    }
-                  },
-                ),
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                onSelected: (value) {
-                  if (value == 'add_to_playlist') {
-                    _showAddToPlaylistDialog(context);
-                  } else if (value == 'like') {
-                    likedProvider.toggleLike(track);
-                  } else if (value == 'download') {
-                    if (isDownloaded) {
-                      downloadedProvider.deleteTrack(track);
-                    } else {
-                      downloadedProvider.downloadTrack(track);
-                    }
-                  }
-                },
-                itemBuilder: (context) {
-                  final items = <PopupMenuEntry<String>>[];
-                  if (!showLikeInline) {
-                    items.add(
-                      PopupMenuItem(
-                        value: 'like',
-                        child: Row(
+                  const SizedBox(width: 12),
+
+                  // Title + artist + duration
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          track.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
                           children: [
-                            Icon(isLiked ? Icons.favorite : Icons.favorite_border,
-                                color: isLiked ? Colors.green : Colors.white),
-                            const SizedBox(width: 8),
-                            Text(isLiked ? t.unlike : t.like),
+                            if (track.artist.isNotEmpty)
+                              Flexible(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    if (track.artistId != null) {
+                                      Navigator.pushNamed(
+                                        context,
+                                        '/artist',
+                                        arguments: track.artistId,
+                                      );
+                                    }
+                                  },
+                                  child: Text(
+                                    track.artist,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onSurface.withAlpha(140),
+                                      fontSize: 12,
+                                      decoration: track.artistId != null
+                                          ? TextDecoration.underline
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            if (track.duration != null) ...[
+                              const SizedBox(width: 8),
+                              Text(
+                                _formatDuration(Duration(milliseconds: track.duration!)),
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface.withAlpha(100),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
-                      ),
-                    );
-                  }
-                  if (!kIsWeb && !showDownloadInline) {
-                    items.add(
-                      PopupMenuItem(
-                        value: 'download',
-                        child: Row(
-                          children: [
-                            Icon(isDownloaded ? Icons.check_circle : Icons.download,
-                                color: isDownloaded ? Colors.green : Colors.white),
-                            const SizedBox(width: 8),
-                            Text(isDownloaded ? t.deleteDownloaded : t.download),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                  items.add(
-                    PopupMenuItem(
-                      value: 'add_to_playlist',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.playlist_add),
-                          const SizedBox(width: 8),
-                          Text(t.addToPlaylist),
-                        ],
-                      ),
+                      ],
                     ),
-                  );
-                  return items;
-                },
+                  ),
+
+                  // Action buttons
+                  if (showInlineLike)
+                    IconButton(
+                      icon: Icon(
+                        isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: isLiked ? theme.colorScheme.primary : Colors.white54,
+                        size: 20,
+                      ),
+                      onPressed: () => likedProvider.toggleLike(track),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  if (showInlineDownload)
+                    DownloadButton(
+                      track: track,
+                      isDownloaded: isDownloaded,
+                      onDownload: () async {
+                        try {
+                          await downloadedProvider.downloadTrack(track);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('${t.download} ${track.title}')),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(t.downloadError(e.toString()))),
+                            );
+                          }
+                        }
+                      },
+                      onDelete: () async {
+                        await downloadedProvider.deleteTrack(track);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('${t.deleteDownloaded} ${track.title}')),
+                          );
+                        }
+                      },
+                    ),
+
+                  // More menu
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, size: 18, color: Colors.white54),
+                    onSelected: (value) {
+                      if (value == 'add_to_playlist') {
+                        _showAddToPlaylistDialog(context);
+                      } else if (value == 'like') {
+                        likedProvider.toggleLike(track);
+                      } else if (value == 'download') {
+                        isDownloaded
+                            ? downloadedProvider.deleteTrack(track)
+                            : downloadedProvider.downloadTrack(track);
+                      }
+                    },
+                    itemBuilder: (_) {
+                      final items = <PopupMenuEntry<String>>[];
+                      if (!showInlineLike) {
+                        items.add(PopupMenuItem(
+                          value: 'like',
+                          child: Row(
+                            children: [
+                              Icon(
+                                isLiked ? Icons.favorite : Icons.favorite_border,
+                                size: 18,
+                                color: isLiked ? theme.colorScheme.primary : null,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(isLiked ? t.unlike : t.like),
+                            ],
+                          ),
+                        ));
+                      }
+                      if (!kIsWeb && !showInlineDownload) {
+                        items.add(PopupMenuItem(
+                          value: 'download',
+                          child: Row(
+                            children: [
+                              Icon(
+                                isDownloaded ? Icons.check_circle : Icons.download,
+                                size: 18,
+                                color: isDownloaded ? theme.colorScheme.primary : null,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(isDownloaded ? t.deleteDownloaded : t.download),
+                            ],
+                          ),
+                        ));
+                      }
+                      items.add(PopupMenuItem(
+                        value: 'add_to_playlist',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.playlist_add, size: 18),
+                            const SizedBox(width: 8),
+                            Text(t.addToPlaylist),
+                          ],
+                        ),
+                      ));
+                      return items;
+                    },
+                  ),
+                ],
               ),
-              IconButton(
-                icon: const Icon(Icons.play_arrow),
-                onPressed: () {
-                  if (onPlay != null) {
-                    onPlay!();
-                  } else {
-                    final player = Provider.of<PlayerProvider>(context, listen: false);
-                    player.play(track);
-                  }
-                },
-              ),
-            ],
+            ),
           ),
         );
       },

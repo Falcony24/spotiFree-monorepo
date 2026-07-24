@@ -37,19 +37,13 @@ class _CatalogScreenState extends State<CatalogScreen> {
     if (mode.isOfflineMode && provider.albums.isEmpty) {
       return Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.wifi_off, size: 48, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              t.offlineNoAlbums,
-              style: TextStyle(color: Colors.grey),
-            ),
-            SizedBox(height: 8),
-            Text(
-              t.offlineTurnOff,
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
+            Icon(Icons.wifi_off, size: 56, color: Theme.of(context).colorScheme.primary.withAlpha(100)),
+            const SizedBox(height: 16),
+            Text(t.offlineNoAlbums, style: Theme.of(context).textTheme.bodyLarge),
+            const SizedBox(height: 8),
+            Text(t.offlineTurnOff, style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
       );
@@ -60,7 +54,9 @@ class _CatalogScreenState extends State<CatalogScreen> {
     }
 
     if (provider.albums.isEmpty) {
-      return Center(child: Text(t.noAlbums));
+      return Center(
+        child: Text(t.noAlbums, style: Theme.of(context).textTheme.bodyLarge),
+      );
     }
 
     return NotificationListener<ScrollNotification>(
@@ -76,22 +72,17 @@ class _CatalogScreenState extends State<CatalogScreen> {
         builder: (context, constraints) {
           final crossAxisCount = getCrossAxisCount(constraints.maxWidth);
           return GridView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
-              childAspectRatio: 0.8,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+              childAspectRatio: 0.78,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
             ),
             itemCount: provider.albums.length + (provider.isLoadingMore ? 1 : 0),
             itemBuilder: (ctx, index) {
               if (index == provider.albums.length) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
+                return const Center(child: CircularProgressIndicator());
               }
               final album = provider.albums[index];
               return AlbumGridItem(
@@ -100,7 +91,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AlbumDetailScreen(album: album),
+                      builder: (_) => AlbumDetailScreen(album: album),
                     ),
                   );
                 },

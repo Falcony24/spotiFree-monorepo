@@ -1,37 +1,66 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:spotifree/l10n/app_localizations.dart';
 
-class SearchBarWidget extends StatelessWidget {
+class SearchBarWidget extends StatefulWidget {
   final Function(String) onSearch;
 
   const SearchBarWidget({super.key, required this.onSearch});
 
   @override
+  State<SearchBarWidget> createState() => _SearchBarWidgetState();
+}
+
+class _SearchBarWidgetState extends State<SearchBarWidget> {
+  final TextEditingController _controller = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      widget.onSearch(value.trim());
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final controller = TextEditingController();
-    final t = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[800],
-        borderRadius: BorderRadius.circular(30),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(
-        controller: controller,
+        controller: _controller,
+        onChanged: _onChanged,
+        style: theme.textTheme.bodyLarge,
         decoration: InputDecoration(
-          hintText: t.searchHint,
-          prefixIcon: const Icon(Icons.search),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.clear),
-            onPressed: () {
-              controller.clear();
-              onSearch('');
-            },
+          hintText: 'Search artists, albums, tracks...',
+          prefixIcon: Icon(
+            Icons.search,
+            color: theme.colorScheme.onSurface.withAlpha(120),
           ),
+          suffixIcon: _controller.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, size: 18),
+                  onPressed: () {
+                    _controller.clear();
+                    widget.onSearch('');
+                  },
+                )
+              : null,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
         ),
-        onSubmitted: (value) => onSearch(value),
       ),
     );
   }
